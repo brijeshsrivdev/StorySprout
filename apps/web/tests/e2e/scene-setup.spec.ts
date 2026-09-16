@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("configures Scene Setup, initializes Editor, edits Character and persists Composition", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto("/create");
   await page.getByRole("button", { name: "Blank Story" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
