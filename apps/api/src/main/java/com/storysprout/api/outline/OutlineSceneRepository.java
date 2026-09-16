@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class OutlineSceneRepository {
+    private static final int TEMP_ORDER_BASE = 1_000_000;
     private final JdbcTemplate jdbc;
 
     public OutlineSceneRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
@@ -34,14 +35,23 @@ public class OutlineSceneRepository {
     public void deleteAndCompact(UUID sceneId, UUID storyId) {
         jdbc.update("DELETE FROM story_outline_scenes WHERE id = ? AND story_id = ?", sceneId, storyId);
         List<OutlineScene> remaining = findByStoryId(storyId);
-        for (int i = 0; i < remaining.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", -(i + 1), remaining.get(i).id(), storyId);
-        for (int i = 0; i < remaining.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", i + 1, remaining.get(i).id(), storyId);
+        List<UUID> ids = remaining.stream().map(OutlineScene::id).toList();
+        moveToTemporaryPositions(storyId, ids);
+        assignPositions(storyId, ids);
     }
 
     public void reorder(UUID storyId, List<UUID> orderedIds) {
         if (orderedIds.isEmpty()) return;
-        for (int i = 0; i < orderedIds.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", -(i + 1), orderedIds.get(i), storyId);
-        for (int i = 0; i < orderedIds.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", i + 1, orderedIds.get(i), storyId);
+        moveToTemporaryPositions(storyId, orderedIds);
+        assignPositions(storyId, orderedIds);
+    }
+
+    private void moveToTemporaryPositions(UUID storyId, List<UUID> ids) {
+        for (int i = 0; i < ids.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", TEMP_ORDER_BASE + i, ids.get(i), storyId);
+    }
+
+    private void assignPositions(UUID storyId, List<UUID> ids) {
+        for (int i = 0; i < ids.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", i + 1, ids.get(i), storyId);
     }
 
     private OutlineScene map(java.sql.ResultSet rs) throws java.sql.SQLException {
