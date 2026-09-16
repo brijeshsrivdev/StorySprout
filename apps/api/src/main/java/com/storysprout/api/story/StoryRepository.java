@@ -1,5 +1,6 @@
 package com.storysprout.api.story;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ public class StoryRepository {
     public StoryRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public Story insert(Story story) {
-        jdbc.update("INSERT INTO stories (id, project_id, title, idea, target_age, duration_minutes, visual_style, language, creation_mode, generation_status, draft_content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", story.id(), story.projectId(), story.title(), story.idea(), story.targetAge(), story.durationMinutes(), story.visualStyle(), story.language(), story.creationMode().name(), story.generationStatus().name(), story.draftContent(), story.createdAt(), story.updatedAt());
+        jdbc.update("INSERT INTO stories (id, project_id, title, idea, target_age, duration_minutes, visual_style, language, creation_mode, generation_status, draft_content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", story.id(), story.projectId(), story.title(), story.idea(), story.targetAge(), story.durationMinutes(), story.visualStyle(), story.language(), story.creationMode().name(), story.generationStatus().name(), story.draftContent(), Timestamp.from(story.createdAt()), Timestamp.from(story.updatedAt()));
         return story;
     }
 
