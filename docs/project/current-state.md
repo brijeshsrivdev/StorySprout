@@ -48,6 +48,11 @@ Scope:
 
 No implementation has started for this feature.
 
+## Foundation gaps to resolve during implementation
+- **Frontend test tooling:** `apps/web/package.json` currently has no test runner or component-testing dependencies. Because Story Creation requires frontend unit/component/E2E coverage, implementation will need the smallest justified testing setup before or alongside the first feature tests.
+- **API error envelope:** `docs/api/api-conventions.md` defines the API base path and response conventions but does not yet define a reusable domain-error response envelope. Story Creation should establish or document one consistent error envelope rather than creating an isolated feature-only format.
+- **Target-age options:** the Story Creation specification intentionally leaves the exact finite target-age labels/range open. This must be agreed before implementation.
+
 ## Not implemented
 - Story Creation application code.
 - Authentication/authorization.
@@ -64,7 +69,7 @@ No implementation has started for this feature.
 ## Foundation conflict/blocker review
 No architectural conflict was discovered for Story Creation. The slice fits the existing web/API/PostgreSQL structure and the established AI boundary.
 
-One product detail remains intentionally open before implementation: the exact finite target-age option set. The specification requires a stable domain/API value but does not silently invent the final labels/range. This must be resolved before implementation begins.
+The Composition Model remains untouched by this slice, AI remains behind the internal boundary, and no renderer changes are required.
 
 The existing foundation database migration contains no domain tables; Story Creation therefore requires a new Flyway migration during implementation. The existing foundation migration must remain unchanged.
 
