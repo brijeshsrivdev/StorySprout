@@ -4,9 +4,15 @@
 
 **Project** — The creator's top-level video/story workspace and persisted unit.
 
-**Story** — The narrative content associated with a project; includes story setup/outline concepts.
+**Story** — The narrative content associated with a project; includes story setup and, after the Story Outline slice, its planning outline.
 
-**Scene** — A bounded section of the story with a duration, background, objects and timeline content.
+**Story Outline** — An editable narrative planning structure that turns a Story into an ordered sequence of Outline Scenes. It is not the Editor/Composition model and does not contain visual placement, animation, timeline or renderer semantics.
+
+**Outline Scene** — A planning-level section of a Story Outline with an order, title, summary and planned duration. It describes what happens in the story and guides future Scene Setup. It is not a Composition Scene.
+
+**Scene** — In future visual/editor context, a bounded section of the story with visual/background/object and timeline content. When referring specifically to the planning layer, use **Outline Scene** to avoid ambiguity.
+
+**Composition Scene** — A future/editor-level scene represented within the canonical Composition Model. It contains editable video semantics and is distinct from an Outline Scene.
 
 **Character** — A reusable story character represented through one or more character assets.
 
