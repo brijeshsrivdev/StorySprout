@@ -44,5 +44,6 @@ The implementation document must describe the feature end-to-end and include a *
 | Story Outline | VALIDATED | `docs/specifications/story-outline.md` | `docs/features/story-outline/implementation.md` | Backend unit/integration, frontend duration unit, PostgreSQL/Testcontainers, Playwright E2E; full CI validation passed | Existing Story Creation, Spring AI/Gemini infrastructure, PostgreSQL, Next.js |
 | Characters | VALIDATED | `docs/specifications/characters.md` | `docs/features/characters/implementation.md` | Backend unit/integration, frontend/E2E coverage; merged CI passed | Story Outline, existing Spring AI/Gemini infrastructure, PostgreSQL, Next.js |
 | Scene Setup | VALIDATED | `docs/specifications/scene-setup.md` | `docs/features/scene-setup/implementation.md` | Backend unit/integration, PostgreSQL/Flyway, Playwright E2E; full CI passed | Story Outline, Characters, PostgreSQL, Next.js |
+| Editor | SPECIFIED | `docs/specifications/editor.md` | — | Test cases specified; implementation not started | Scene Setup, Characters, Story Outline, `packages/editor-model` Composition 1.0 |
 
 AI Provider Integration uses the approved initial model `gemini-2.5-flash`. Real-provider validation remains opt-in/manual and normal CI remains credential-free.

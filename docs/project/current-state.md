@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, and Scene Setup are validated in GitHub Actions. Scene Setup is the latest completed feature on `feature/scene-setup`.
+**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, and Scene Setup are validated in GitHub Actions. SPEC-006 Editor is now specified; implementation has not started.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -17,6 +17,21 @@
 - Story Outline — VALIDATED.
 - Characters — VALIDATED.
 - Scene Setup — VALIDATED.
+
+## SPEC-006 Editor
+**Status:** SPECIFIED — implementation not started
+Specification: `docs/specifications/editor.md`
+
+Defined by the specification:
+- One Outline Scene per Editor session using `storyId + outlineSceneId`.
+- Scene Setup initializes a Composition only when one does not already exist.
+- Existing Composition is authoritative on reopen; no silent Scene Setup synchronization.
+- Existing Composition schema `1.0` is sufficient; no model change is specified.
+- 16:9 / 1920×1080 logical stage with Character and Prop objects.
+- Basic selection, move, uniform scale, visibility, deletion, adding available Characters/Props, and simple layer ordering.
+- Explicit Save with dirty/error/conflict states and optimistic Composition versioning.
+- Composition JSON persisted as the canonical document in PostgreSQL with a root `compositions` record.
+- Timeline, animation, dialogue/audio timing, and advanced authoring remain separate/deferred.
 
 ## Scene Setup
 **Status:** VALIDATED
@@ -42,7 +57,7 @@ Implemented:
 - Existing migrations V1–V4 remain unchanged.
 - `V5__scene_setup.sql` creates `scene_setups`, `scene_setup_characters`, `scene_setup_props`, `scene_setup_dialogue`, and `scene_setup_actions`.
 - Scene Setup has no duration field.
-- Child rows cascade from their Scene Setup root.
+- Composition persistence is not implemented yet; SPEC-006 proposes a new `compositions` JSONB root table for the implementation phase.
 
 ## Composition / Renderer boundary
 `packages/editor-model` Composition schema `1.0` is unchanged. Scene Setup does not persist transforms, exact timing, keyframes, camera state, audio timing, Timeline clips, or renderer fields. Renderer code is unchanged.
@@ -53,10 +68,12 @@ Implemented:
 - Story Outline: PASS in merged CI.
 - Characters: PASS in merged CI.
 - Scene Setup: PASS in GitHub Actions run `35101048667`.
+- SPEC-006 Editor: SPECIFIED only; implementation validation NOT RUN because implementation has not started.
 - Real Gemini smoke test: NOT RUN and not applicable to Scene Setup.
 
 ## Not implemented
-- Visual Editor/Timeline/Composition persistence/editing.
+- Visual Editor implementation/Composition persistence.
+- Timeline.
 - Character image generation/upload and advanced asset management.
 - Voice/music/media generation.
 - Preview/render/FFmpeg/render jobs.
@@ -65,4 +82,4 @@ Implemented:
 - Payments/collaboration/production deployment.
 
 ## Architecture review
-Scene Setup is a preparation model between Characters and the future Editor. Story Outline remains authoritative for scene planning; Characters remains authoritative for reusable identity and Story membership; Editor/Timeline will own Composition and exact timing; Renderer consumes Composition JSON. Scene Setup does not create or modify Composition.
+Scene Setup is the preparation model between Characters and Editor. Story Outline remains authoritative for narrative planning; Characters remains authoritative for reusable identity and Story membership; Scene Setup remains preparation data; Editor/Composition will own canonical editable visual state; future Timeline will own exact timing; Renderer consumes Composition JSON. No bidirectional Scene Setup ↔ Composition synchronization is permitted by SPEC-006.
