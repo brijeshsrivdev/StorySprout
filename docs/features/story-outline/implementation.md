@@ -2,7 +2,7 @@
 
 **Feature:** Story Outline  
 **Specification:** `docs/specifications/story-outline.md` (SPEC-003)  
-**Status:** IMPLEMENTED — validation pending
+**Status:** VALIDATED
 
 ## Feature purpose
 
@@ -57,7 +57,7 @@ The outline remains outside `packages/editor-model` and never creates Compositio
 - Save Changes.
 - Target / Planned / Variance metrics.
 - Under-target, approximately-on-target and over-target visual states with text labels.
-- Field-level HTML constraints and save blocking for invalid title/summary/duration.
+- Field-level validation and save blocking for invalid title/summary/duration.
 - Delete confirmation.
 - Unsaved state handling.
 - Continue to a Scene Setup placeholder only.
@@ -104,7 +104,7 @@ Creates `story_outline_scenes` with:
 
 Existing migrations were not modified.
 
-`OutlineSceneRepository` persists ordered scenes and performs atomic delete compaction and reorder using temporary negative order positions to avoid uniqueness collisions.
+`OutlineSceneRepository` persists ordered scenes and performs atomic delete compaction and collision-safe reorder using valid temporary positive positions to respect the database's positive-order constraint.
 
 ## AI / external services
 
@@ -188,13 +188,32 @@ Existing persisted outline content is not replaced by a failed generation reques
 
 ### Frontend
 - `apps/web/lib/outline.test.ts` covers duration planning/variance states.
+- Existing Story Creation frontend tests continue to pass.
 
 ### E2E
 - `apps/web/tests/e2e/story-outline.spec.ts` covers creation → outline → add/edit/save/refresh and generation → reorder → duration preservation.
+- Existing Story Creation E2E was updated for the approved Story → Outline continuation and passes.
 
 ### Regression
-- Existing Story Creation tests remain part of the repository test suite.
-- Renderer remains unchanged and continues through the existing CI build.
+- Renderer build/regression passes unchanged.
+- Full CI Web/API/Renderer/E2E validation passed in run `35085193451`.
+
+## Validation result
+
+| Validation | Status |
+|---|---|
+| Frontend lint | PASS |
+| Frontend typecheck | PASS |
+| Frontend unit tests | PASS |
+| Frontend build | PASS |
+| Backend compile | PASS |
+| Backend tests | PASS |
+| PostgreSQL/Testcontainers integration | PASS |
+| Flyway/database validation | PASS |
+| Story Outline Playwright E2E | PASS |
+| Existing Story Creation E2E regression | PASS |
+| Renderer build/regression | PASS |
+| Real Gemini API smoke test | NOT RUN — intentionally excluded from normal CI |
 
 ## Known limitations
 
@@ -255,5 +274,6 @@ Existing persisted outline content is not replaced by a failed generation reques
 | `apps/web/app/stories/[storyId]/outline/page.tsx` | Story Outline UI | Full V1 planning editor and duration visibility. |
 | `apps/web/app/stories/[storyId]/scene-setup/page.tsx` | Navigation placeholder | Future Scene Setup destination only; no Scene Setup feature implementation. |
 | `apps/web/tests/e2e/story-outline.spec.ts` | Playwright E2E | End-to-end Story → Outline, persistence, variance and reorder coverage. |
+| `apps/web/tests/e2e/story-creation.spec.ts` | Story Creation regression | Verifies approved Story → Outline continuation remains compatible with existing Story Creation flow. |
 | `apps/api/src/test/java/com/storysprout/api/outline/StoryOutlineServiceTest.java` | Backend unit tests | Domain/service duration and mutation rules. |
 | `apps/api/src/test/java/com/storysprout/api/outline/StoryOutlineControllerIntegrationTest.java` | Backend integration tests | PostgreSQL-backed API/persistence coverage. |
