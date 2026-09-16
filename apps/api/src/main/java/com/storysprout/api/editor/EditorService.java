@@ -1,0 +1,148 @@
+package com.storysprout.api.editor;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.storysprout.api.character.Character;
+import com.storysprout.api.character.CharacterRepository;
+import com.storysprout.api.outline.OutlineScene;
+import com.storysprout.api.outline.OutlineSceneRepository;
+import com.storysprout.api.scene.SceneSetup;
+import com.storysprout.api.scene.SceneSetupCatalog;
+import com.storysprout.api.scene.SceneSetupProp;
+import com.storysprout.api.scene.SceneSetupRepository;
+import com.storysprout.api.story.Story;
+import com.storysprout.api.story.StoryRepository;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class EditorService {
+    private static final int WIDTH = 1920;
+    private static final int HEIGHT = 1080;
+    private static final int FPS = 30;
+    private static final double MIN_SCALE = 0.25;
+    private static final double MAX_SCALE = 3.0;
+
+    private final StoryRepository stories;
+    private final OutlineSceneRepository outlines;
+    private final SceneSetupRepository setups;
+    private final CharacterRepository characters;
+    private final CompositionRepository compositions;
+    private final ObjectMapper mapper;
+
+    public EditorService(StoryRepository stories, OutlineSceneRepository outlines, SceneSetupRepository setups,
+                         CharacterRepository characters, CompositionRepository compositions, ObjectMapper mapper) {
+        this.stories=stories; this.outlines=outlines; this.setups=setups; this.characters=characters; this.compositions=compositions; this.mapper=mapper;
+    }
+
+    @Transactional
+    public EditorContext open(UUID storyId, UUID sceneId) {
+        Context c=context(storyId,sceneId);
+        Composition existing=compositions.find(c.story.id(),sceneId).orElse(null);
+        if(existing!=null) return contextResponse(c,existing,"EXISTING");
+        JsonNode initial=initialize(c);
+        Composition created=compositions.insert(UUID.randomUUID(),c.story.id(),sceneId,initial);
+        return contextResponse(c,created,"INITIALIZED");
+    }
+
+    @Transactional(readOnly=true)
+    public Composition get(UUID storyId, UUID sceneId) {
+        Context c=context(storyId,sceneId);
+        return compositions.find(c.story.id(),sceneId).orElseThrow(() -> new EditorNotFoundException("Composition not found"));
+    }
+
+    @Transactional
+    public Composition save(UUID storyId, UUID sceneId, long expectedVersion, JsonNode json) {
+        Context c=context(storyId,sceneId);
+        validate(c,json);
+        Composition current=compositions.find(c.story.id(),sceneId).orElseThrow(() -> new EditorNotFoundException("Composition not found"));
+        if(current.version()!=expectedVersion) throw new EditorConflictException("Composition version is stale; reload required");
+        return compositions.update(current.id(),c.story.id(),sceneId,expectedVersion,json).orElseThrow(() -> new EditorConflictException("Composition version is stale; reload required"));
+    }
+
+    private JsonNode initialize(Context c) {
+        ObjectNode root=mapper.createObjectNode();
+        root.put("schemaVersion","1.1"); root.put("projectId",c.story.id().toString()); root.put("width",WIDTH); root.put("height",HEIGHT); root.put("fps",FPS);
+        int durationMs=c.scene.durationSeconds()*1000;
+        root.put("durationMs",durationMs);
+        ArrayNode scenesNode=root.putArray("scenes");
+        ObjectNode scene=scenesNode.addObject(); scene.put("id",c.scene.id().toString()); scene.put("name",c.scene.title()); scene.put("durationMs",durationMs); scene.putArray("timeline");
+        if(c.setup.backgroundPresetKey()!=null) scene.putObject("background").put("assetId",backgroundAssetId(c.setup.backgroundPresetKey()));
+        ArrayNode objects=scene.putArray("objects");
+        List<Character> storyCharacters=characters.findByStoryId(c.story.id());
+        int characterIndex=0;
+        for(var selected:c.setup.characters()) {
+            Character character=storyCharacters.stream().filter(x->x.id().equals(selected.characterId())).findFirst().orElseThrow(() -> new EditorValidationException("Scene Setup Character is no longer available"));
+            ObjectNode object=objects.addObject(); object.put("id",UUID.randomUUID().toString()); object.put("objectType","CHARACTER"); object.put("assetId",character.id().toString()); object.put("x",clamp(320+characterIndex*300,0,WIDTH)); object.put("y",540); object.put("scale",1.0); object.put("rotation",0); object.put("visible",true); characterIndex++;
+        }
+        int propIndex=0;
+        for(SceneSetupProp prop:c.setup.props()) {
+            if(!SceneSetupCatalog.propExists(prop.propPresetKey())) throw new EditorValidationException("Scene Setup Prop is no longer available");
+            ObjectNode object=objects.addObject(); object.put("id",UUID.randomUUID().toString()); object.put("objectType","PROP"); object.put("assetId",propAssetId(prop.propPresetKey())); object.put("x",clamp(500+propIndex*240,0,WIDTH)); object.put("y",760); object.put("scale",1.0); object.put("rotation",0); object.put("visible",true); propIndex++;
+        }
+        validate(c,root);
+        return root;
+    }
+
+    private void validate(Context c, JsonNode root) {
+        if(root==null || !root.isObject()) throw new EditorValidationException("Composition must be a JSON object");
+        if(!"1.1".equals(text(root,"schemaVersion"))) throw new EditorValidationException("Composition schemaVersion must be 1.1");
+        if(!c.story.id().toString().equals(text(root,"projectId"))) throw new EditorValidationException("Composition projectId does not match Story context");
+        if(intValue(root,"width")!=WIDTH || intValue(root,"height")!=HEIGHT || intValue(root,"fps")!=FPS) throw new EditorValidationException("Composition must use the fixed 1920x1080 stage and 30 fps");
+        long duration=longValue(root,"durationMs"); if(duration<0) throw new EditorValidationException("Composition durationMs must be non-negative");
+        JsonNode scenes=root.get("scenes"); if(scenes==null||!scenes.isArray()||scenes.size()!=1) throw new EditorValidationException("Editor Composition must contain exactly one scene");
+        ObjectNode scene=(ObjectNode)scenes.get(0);
+        if(!c.scene.id().toString().equals(text(scene,"id"))) throw new EditorValidationException("Composition scene does not match Outline Scene");
+        if(!scene.has("objects")||!scene.get("objects").isArray()) throw new EditorValidationException("Scene objects are required");
+        JsonNode timeline=scene.get("timeline"); if(timeline==null||!timeline.isArray()||!timeline.isEmpty()) throw new EditorValidationException("Timeline is not editable in Editor V1");
+        var objectIds=new HashSet<String>();
+        for(JsonNode object:scene.get("objects")) validateObject(c,object,objectIds);
+        if(scene.has("background")) validateBackground(scene.get("background"));
+    }
+
+    private void validateObject(Context c, JsonNode object, HashSet<String> ids) {
+        if(!object.isObject()||text(object,"id").isBlank()||!ids.add(text(object,"id"))) throw new EditorValidationException("Scene object IDs must be present and unique");
+        String type=text(object,"objectType"); if(!type.equals("CHARACTER")&&!type.equals("PROP")) throw new EditorValidationException("Scene objectType must be CHARACTER or PROP");
+        String assetId=text(object,"assetId"); if(assetId.isBlank()) throw new EditorValidationException("Scene object assetId is required");
+        double x=number(object,"x"), y=number(object,"y"), scale=number(object,"scale"), rotation=number(object,"rotation");
+        if(!finite(x)||!finite(y)||x<0||x>WIDTH||y<0||y>HEIGHT) throw new EditorValidationException("Scene object position is outside the logical stage");
+        if(!finite(scale)||scale<MIN_SCALE||scale>MAX_SCALE) throw new EditorValidationException("Scene object scale must be between 0.25 and 3.0");
+        if(!finite(rotation)||rotation!=0) throw new EditorValidationException("Editor V1 only supports rotation 0");
+        if(!object.has("visible")||!object.get("visible").isBoolean()) throw new EditorValidationException("Scene object visible must be boolean");
+        if(type.equals("CHARACTER")) {
+            UUID id; try{id=UUID.fromString(assetId);}catch(Exception e){throw new EditorValidationException("Character visual reference is invalid");}
+            if(!characters.membershipExists(c.story.id(),id)) throw new EditorValidationException("Character is not available in this Story");
+        } else {
+            if(!assetId.startsWith("prop-preset:")) throw new EditorValidationException("Prop visual reference is invalid");
+            String key=assetId.substring("prop-preset:".length()); if(!SceneSetupCatalog.propExists(key)) throw new EditorValidationException("Prop preset is not available");
+        }
+    }
+
+    private void validateBackground(JsonNode background){
+        if(!background.isObject()) throw new EditorValidationException("Background must be an object");
+        String asset=text(background,"assetId"); if(!asset.startsWith("background-preset:")) throw new EditorValidationException("Background reference is invalid");
+        if(!SceneSetupCatalog.backgroundExists(asset.substring("background-preset:".length()))) throw new EditorValidationException("Background preset is not available");
+    }
+
+    private Context context(UUID storyId,UUID sceneId){
+        Story story=stories.findById(storyId).orElseThrow(()->new EditorNotFoundException("Story not found"));
+        OutlineScene scene=outlines.findByIdAndStoryId(sceneId,storyId).orElseThrow(()->new EditorNotFoundException("Outline Scene not found"));
+        SceneSetup setup=setups.findByOutlineSceneId(sceneId).orElseThrow(()->new EditorNotFoundException("Scene Setup not found"));
+        return new Context(story,scene,setup);
+    }
+    private EditorContext contextResponse(Context c,Composition composition,String status){return new EditorContext(c.story.id(),c.story.title(),c.scene.id(),c.scene.orderIndex(),c.scene.title(),c.scene.summary(),c.scene.durationSeconds(),c.setup,characters.findByStoryId(c.story.id()),SceneSetupCatalog.BACKGROUNDS,SceneSetupCatalog.PROPS,composition,status);}
+    private String text(JsonNode n,String field){JsonNode x=n.get(field);return x!=null&&x.isTextual()?x.textValue():"";}
+    private int intValue(JsonNode n,String field){JsonNode x=n.get(field);if(x==null||!x.canConvertToInt())throw new EditorValidationException(field+" is required");return x.intValue();}
+    private long longValue(JsonNode n,String field){JsonNode x=n.get(field);if(x==null||!x.canConvertToLong())throw new EditorValidationException(field+" is required");return x.longValue();}
+    private double number(JsonNode n,String field){JsonNode x=n.get(field);if(x==null||!x.isNumber())throw new EditorValidationException(field+" is required");return x.doubleValue();}
+    private boolean finite(double n){return !Double.isNaN(n)&&!Double.isInfinite(n);}
+    private int clamp(int n,int min,int max){return Math.max(min,Math.min(max,n));}
+    private String backgroundAssetId(String key){return "background-preset:"+key;}
+    private String propAssetId(String key){return "prop-preset:"+key;}
+    private record Context(Story story,OutlineScene scene,SceneSetup setup){}
+}
