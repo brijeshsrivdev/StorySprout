@@ -28,18 +28,16 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await page.reload();
   await expect(page.getByRole("link", { name: "Open Editor →" })).toBeVisible();
 
-  const editorResponse = page.waitForResponse(
-    response =>
-      response.url().includes("/api/v1/stories/") &&
-      response.url().includes("/editor") &&
-      response.request().method() === "GET",
-    { timeout: 15000 }
-  );
+  const [_, response] = await Promise.all([
+    page.getByRole("link", { name: "Open Editor →" }).click(),
+    page.waitForResponse(
+      res => res.url().includes("/api/v1/stories/") && res.url().includes("/editor") && res.request().method() === "GET",
+      { timeout: 15000 }
+    ),
+  ]);
 
-  await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page).toHaveURL(/\/stories\/.+\/editor\?scene=/);
 
-  const response = await editorResponse;
   const responseBody = await response.text();
   expect(response.ok(), `Editor context request failed: ${response.status()} ${responseBody}`).toBeTruthy();
 
