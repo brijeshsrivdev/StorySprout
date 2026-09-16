@@ -62,5 +62,16 @@ Do not introduce unnecessary microservices, Kubernetes, Redis/queues, production
 
 Meaningful features follow Specification → Acceptance Criteria → Test Cases → Failing Tests → Implementation → Passing Tests → Refactor → Validation → Feature Documentation → Current-State Update. Feature implementation docs preserve end-to-end knowledge and exact file responsibilities.
 
+## ADR-013 — Spring AI is infrastructure behind provider-independent AI boundaries
+**Status:** Accepted for integration architecture; implementation pending
+
+Spring AI may be introduced as the infrastructure/integration mechanism for external AI providers, but it must remain behind StorySprout's application-level AI contracts. Application/domain code must not depend on Spring AI, Google GenAI, Gemini-specific classes, provider credentials, or provider-specific response types.
+
+For the planned Gemini integration, `GeminiStoryGenerator` will implement the existing `StoryGenerator` contract. `ChatClient` is the normal adapter-level API; direct `GoogleGenAiChatModel` use requires a separate concrete justification. Provider/model selection and credentials remain externalized.
+
+The requested `gemini-2.0-flash` target is currently blocked because Google's documented shutdown date was June 1, 2026. A currently supported Gemini model must be explicitly selected before implementation; no model substitution is silently authorized by this ADR.
+
+This decision does not add Spring AI dependencies, change StoryGenerator, change Story Creation, or create database/Composition changes.
+
 ## Changing a decision
 Record the reason, affected components, migration/compatibility implications, and the new decision before or alongside implementation where practical.
