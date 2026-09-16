@@ -3,9 +3,12 @@ import { test, expect } from "@playwright/test";
 test("blank story persists and is visible after dashboard refresh", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
-  await page.getByRole("button", { name: "Blank Story" }).click();
-  await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
-  await page.getByRole("button", { name: "Continue" }).click();
+  const blankStory = page.getByRole("button", { name: "Blank Story" });
+  await blankStory.click();
+  await expect(blankStory).toHaveAttribute("aria-pressed", "true");
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
   await expect(page.getByLabel("Story idea")).toBeVisible();
   await page.getByLabel("Story idea").fill("A tiny fox learns to share.");
   await page.getByLabel("Target age").selectOption("3_5");
@@ -19,9 +22,12 @@ test("blank story persists and is visible after dashboard refresh", async ({ pag
 test("AI story generates and persists its draft", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
-  await page.getByRole("button", { name: "Start with AI" }).click();
-  await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
-  await page.getByRole("button", { name: "Continue" }).click();
+  const aiStory = page.getByRole("button", { name: "Start with AI" });
+  await aiStory.click();
+  await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
   await expect(page.getByLabel("Story idea")).toBeVisible();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("6_8");
@@ -37,9 +43,12 @@ test("AI failure is recoverable without losing setup", async ({ page }) => {
   });
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
-  await page.getByRole("button", { name: "Start with AI" }).click();
-  await expect(page.getByRole("button", { name: "Continue" })).toBeEnabled();
-  await page.getByRole("button", { name: "Continue" }).click();
+  const aiStory = page.getByRole("button", { name: "Start with AI" });
+  await aiStory.click();
+  await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
   await expect(page.getByLabel("Story idea")).toBeVisible();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("9_12");
