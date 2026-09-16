@@ -34,11 +34,8 @@ public class OutlineSceneRepository {
     public void deleteAndCompact(UUID sceneId, UUID storyId) {
         jdbc.update("DELETE FROM story_outline_scenes WHERE id = ? AND story_id = ?", sceneId, storyId);
         List<OutlineScene> remaining = findByStoryId(storyId);
-        for (int i = 0; i < remaining.size(); i++) {
-            OutlineScene scene = remaining.get(i);
-            int position = i + 1;
-            if (scene.orderIndex() != position) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", position, scene.id(), storyId);
-        }
+        for (int i = 0; i < remaining.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", -(i + 1), remaining.get(i).id(), storyId);
+        for (int i = 0; i < remaining.size(); i++) jdbc.update("UPDATE story_outline_scenes SET order_index = ? WHERE id = ? AND story_id = ?", i + 1, remaining.get(i).id(), storyId);
     }
 
     public void reorder(UUID storyId, List<UUID> orderedIds) {
