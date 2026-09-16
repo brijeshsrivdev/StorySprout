@@ -40,5 +40,6 @@ The implementation document must describe the feature end-to-end and include a *
 |---|---|---|---|---|---|
 | Repository Foundation | IMPLEMENTED | Pre-SDD foundation | Foundation implementation is represented by repository history and current-state documentation | API health test + CI checks | Next.js, Spring Boot, PostgreSQL, MinIO |
 | Story Creation | IMPLEMENTED | `docs/specifications/story-creation.md` | `docs/features/story-creation/implementation.md` | Frontend unit/component, backend unit/integration, API/persistence, Playwright E2E | Next.js, Spring Boot, PostgreSQL, Testcontainers, internal StoryGenerator boundary |
+| AI Provider Integration | SPECIFIED | `docs/specifications/ai-provider-integration.md` | Not started — specification only | Planned: adapter, configuration, failure, structured-output and boundary tests | Spring AI 2.0.1, Google GenAI/Gemini, existing StoryGenerator boundary |
 
-The Story Creation implementation document records the final validation state after CI completes.
+The Story Creation implementation document records the final validation state after CI completes. AI Provider Integration has no implementation document yet because implementation has not started.
