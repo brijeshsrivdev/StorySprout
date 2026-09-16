@@ -62,7 +62,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm install --workspaces --include-workspace-root
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - run: docker compose up -d postgres
       - run: chmod +x mvnw && ./mvnw -Dmaven.multiModuleProjectDirectory=$PWD -q spring-boot:run > /tmp/storysprout-api.log 2>&1 &
         working-directory: apps/api
