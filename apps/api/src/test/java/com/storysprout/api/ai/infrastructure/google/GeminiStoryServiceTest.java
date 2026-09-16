@@ -12,10 +12,10 @@ import com.storysprout.api.story.ProjectStatus;
 import com.storysprout.api.story.Story;
 import com.storysprout.api.story.StoryCreateRequest;
 import com.storysprout.api.story.StoryCreationMode;
+import com.storysprout.api.story.StoryCreationResult;
 import com.storysprout.api.story.StoryGenerationStatus;
 import com.storysprout.api.story.StoryRepository;
 import com.storysprout.api.story.StoryService;
-import com.storysprout.api.story.StoryCreationResult;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -35,12 +35,12 @@ class GeminiStoryServiceTest {
         GeminiStoryGenerator generator = new GeminiStoryGenerator(chatClient, promptBuilder, executor, properties, "gemini-2.5-flash");
         StoryService service = new StoryService(projects, stories, generator);
         UUID projectId = UUID.randomUUID();
+        UUID storyId = UUID.randomUUID();
 
         when(projects.findById(projectId)).thenReturn(Optional.of(new Project(projectId, "Project", ProjectStatus.DRAFT, null, null)));
-        Story generating = new Story(UUID.randomUUID(), projectId, "Untitled Story", "A rabbit learns to share.", "6_8", 3, "2D", "ENGLISH", StoryCreationMode.AI, StoryGenerationStatus.GENERATING, null, null, null);
-        Story completed = new Story(generating.id(), projectId, "Sharing Rabbit", "A rabbit learns to share.", "6_8", 3, "2D", "ENGLISH", StoryCreationMode.AI, StoryGenerationStatus.COMPLETED, "A rabbit learns to share.", null, null);
-        when(stories.insert(any())).thenReturn(generating);
-        when(stories.updateGeneration(eq(generating.id()), eq(StoryGenerationStatus.COMPLETED), eq("Sharing Rabbit"), eq("A rabbit learns to share."))).thenReturn(completed);
+        when(stories.insert(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        Story completed = new Story(storyId, projectId, "Sharing Rabbit", "A rabbit learns to share.", "6_8", 3, "2D", "ENGLISH", StoryCreationMode.AI, StoryGenerationStatus.COMPLETED, "A rabbit learns to share.", null, null);
+        when(stories.updateGeneration(any(UUID.class), eq(StoryGenerationStatus.COMPLETED), eq("Sharing Rabbit"), eq("A rabbit learns to share."))).thenReturn(completed);
         when(chatClient.prompt()).thenReturn(requestSpec);
         when(requestSpec.user(any())).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(responseSpec);
