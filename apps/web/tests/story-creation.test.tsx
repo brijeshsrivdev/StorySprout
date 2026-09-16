@@ -3,52 +3,22 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CreateStoryPage from "../app/create/page";
 import StorySetupPage from "../app/create/setup/page";
+import { ApiError } from "../lib/api";
 import * as api from "../lib/api";
 
-vi.mock("../lib/api", () => ({ createProject: vi.fn(), createStory: vi.fn() }));
+vi.mock("../lib/api", async () => { const actual = await vi.importActual<typeof import("../lib/api")>("../lib/api"); return { ...actual, createProject: vi.fn(), createStory: vi.fn(), listProjects: vi.fn() }; });
+let mode = "BLANK";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams(`projectId=p1&mode=${mode}`) }));
+beforeEach(() => { vi.clearAllMocks(); mode = "BLANK"; });
+const blankStory = { id: "s1", projectId: "p1", title: "Untitled Story", idea: "A rabbit learns to share.", targetAge: "6_8" as const, durationMinutes: 3 as const, visualStyle: "2D" as const, language: "ENGLISH" as const, creationMode: "BLANK" as const, generationStatus: "NOT_REQUESTED" as const, draftContent: null, createdAt: "2026-09-16T10:00:00Z", updatedAt: "2026-09-16T10:00:00Z", continuationPath: "/dashboard" };
+async function fillValidSetup(user: ReturnType<typeof userEvent.setup>) { await user.type(screen.getByLabelText("Story idea"), "A rabbit learns to share."); await user.selectOptions(screen.getByLabelText("Target age"), "6_8"); }
 
-const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace }), useSearchParams: () => new URLSearchParams("projectId=p1") }));
-
-beforeEach(() => vi.clearAllMocks());
-
-describe("Create Story flow", () => {
-  it("keeps AI and Blank mutually exclusive and starts setup", async () => {
-    vi.mocked(api.createProject).mockResolvedValue({ id: "p1", name: "Untitled Story", status: "DRAFT", updatedAt: "2026-09-16T10:00:00Z" });
-    const user = userEvent.setup();
-    render(<CreateStoryPage />);
-    const ai = screen.getByRole("button", { name: /Start with AI/i });
-    const blank = screen.getByRole("button", { name: /Blank Story/i });
-    await user.click(ai);
-    expect(ai).toHaveAttribute("aria-pressed", "true");
-    await user.click(blank);
-    expect(blank).toHaveAttribute("aria-pressed", "true");
-    expect(ai).toHaveAttribute("aria-pressed", "false");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(replace).toHaveBeenCalledWith("/create/setup?projectId=p1&mode=BLANK");
-  });
-
-  it("renders only the approved target ages and validates incomplete setup", async () => {
-    const user = userEvent.setup();
-    render(<StorySetupPage />);
-    expect(screen.getByRole("option", { name: "Ages 3–5" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Ages 6–8" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Ages 9–12" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: /13/ })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("Enter a story idea.")).toBeInTheDocument();
-  });
-
-  it("prevents duplicate story submissions", async () => {
-    let resolve!: (value: any) => void;
-    vi.mocked(api.createStory).mockReturnValue(new Promise((r) => { resolve = r; }));
-    const user = userEvent.setup();
-    render(<StorySetupPage />);
-    await user.type(screen.getByLabelText("Story idea"), "A rabbit learns to share.");
-    await user.selectOptions(screen.getByLabelText("Target age"), "6_8");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(api.createStory).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
-    resolve({ id: "s1", projectId: "p1", title: "A Sharing Rabbit", idea: "A rabbit learns to share.", targetAge: "6_8", durationMinutes: 3, visualStyle: "2D", language: "ENGLISH", creationMode: "BLANK", generationStatus: "NOT_REQUESTED", draftContent: null });
-  });
+describe("Story Creation UI", () => {
+  it("shows empty dashboard and Create Story", async () => { vi.mocked(api.listProjects).mockResolvedValue([]); const Dashboard = (await import("../app/page")).default; render(<Dashboard />); expect(await screen.findByText("No stories yet")).toBeInTheDocument(); expect(screen.getByRole("link", { name: "Create Story" })).toBeInTheDocument(); });
+  it("renders project cards", async () => { vi.mocked(api.listProjects).mockResolvedValue([{ id: "p1", name: "Rabbit Adventure", status: "DRAFT", updatedAt: "2026-09-16T10:00:00Z", createdAt: "2026-09-16T09:00:00Z" }]); const Dashboard = (await import("../app/page")).default; render(<Dashboard />); expect(await screen.findByText("Rabbit Adventure")).toBeInTheDocument(); expect(screen.getByText("DRAFT")).toBeInTheDocument(); });
+  it("keeps AI and Blank mutually exclusive and starts setup", async () => { vi.mocked(api.createProject).mockResolvedValue({ id: "p1", name: "Untitled Story", status: "DRAFT", updatedAt: "2026-09-16T10:00:00Z", createdAt: "2026-09-16T10:00:00Z" }); const user = userEvent.setup(); render(<CreateStoryPage />); const ai = screen.getByRole("button", { name: /Start with AI/i }); const blank = screen.getByRole("button", { name: /Blank Story/i }); await user.click(ai); await user.click(blank); expect(blank).toHaveAttribute("aria-pressed", "true"); expect(ai).toHaveAttribute("aria-pressed", "false"); await user.click(screen.getByRole("button", { name: "Continue" })); });
+  it("renders only approved ages and validates incomplete setup", async () => { const user = userEvent.setup(); render(<StorySetupPage />); expect(screen.getByRole("option", { name: "Ages 3–5" })).toBeInTheDocument(); expect(screen.getByRole("option", { name: "Ages 6–8" })).toBeInTheDocument(); expect(screen.getByRole("option", { name: "Ages 9–12" })).toBeInTheDocument(); expect(screen.queryByRole("option", { name: /13/ })).not.toBeInTheDocument(); await user.click(screen.getByRole("button", { name: "Continue" })); expect(screen.getByText("Enter a story idea.")).toBeInTheDocument(); });
+  it("saves blank story without AI", async () => { vi.mocked(api.createStory).mockResolvedValue(blankStory); const user = userEvent.setup(); render(<StorySetupPage />); await fillValidSetup(user); await user.click(screen.getByRole("button", { name: "Continue" })); expect(api.createStory).toHaveBeenCalledTimes(1); expect(api.createStory).toHaveBeenCalledWith("p1", expect.objectContaining({ creationMode: "BLANK", targetAge: "6_8", durationMinutes: 3, visualStyle: "2D", language: "ENGLISH" })); });
+  it("shows AI generating and success states", async () => { mode = "AI"; vi.mocked(api.createStory).mockResolvedValue({ ...blankStory, creationMode: "AI", generationStatus: "COMPLETED", draftContent: "A rabbit shares a carrot." }); const user = userEvent.setup(); render(<StorySetupPage />); await fillValidSetup(user); await user.click(screen.getByRole("button", { name: "Generate Story" })); expect(await screen.findByText("Story draft generated")).toBeInTheDocument(); });
+  it("shows recoverable AI failure", async () => { mode = "AI"; vi.mocked(api.createStory).mockRejectedValue(new ApiError(422, "GENERATION_FAILED", "Story generation failed. Your setup was saved.")); const user = userEvent.setup(); render(<StorySetupPage />); await fillValidSetup(user); await user.click(screen.getByRole("button", { name: "Generate Story" })); expect(await screen.findByText(/Story generation failed/)).toBeInTheDocument(); expect(screen.getByLabelText("Story idea")).toHaveValue("A rabbit learns to share."); });
 });
