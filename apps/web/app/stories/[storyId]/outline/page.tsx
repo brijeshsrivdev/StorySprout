@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, createOutlineScene, deleteOutlineScene, generateOutline, getOutline, OutlineScene, reorderOutlineScenes, StoryOutline, updateOutlineScene } from "../../../../lib/api";
+import { formatDuration, getVarianceState } from "../../../../lib/outline";
 
-const APPROXIMATE_VARIANCE_SECONDS = 10;
 const newId = () => `new-${crypto.randomUUID()}`;
-const formatDuration = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 function varianceState(variance: number) {
-  if (Math.abs(variance) <= APPROXIMATE_VARIANCE_SECONDS) return { label: "Approximately on target", className: "border-amber-200 bg-amber-50 text-amber-800" };
-  if (variance < 0) return { label: "Under target", className: "border-sky-200 bg-sky-50 text-sky-800" };
+  const state = getVarianceState(variance);
+  if (state === "approximately-on-target") return { label: "Approximately on target", className: "border-amber-200 bg-amber-50 text-amber-800" };
+  if (state === "under-target") return { label: "Under target", className: "border-sky-200 bg-sky-50 text-sky-800" };
   return { label: "Over target", className: "border-orange-200 bg-orange-50 text-orange-800" };
 }
 
@@ -78,14 +78,13 @@ export default function StoryOutlinePage() {
           persisted.push(await createOutlineScene(storyId, { title: scene.title.trim(), summary: scene.summary.trim(), durationSeconds: scene.durationSeconds }));
         } else {
           const original = outline.scenes.find(item => item.id === scene.id);
-          if (!original || original.title !== scene.title.trim() || original.summary !== scene.summary.trim() || original.durationSeconds !== scene.durationSeconds) {
-            persisted.push(await updateOutlineScene(storyId, scene.id, { title: scene.title.trim(), summary: scene.summary.trim(), durationSeconds: scene.durationSeconds }));
-          } else persisted.push(scene);
+          if (!original || original.title !== scene.title.trim() || original.summary !== scene.summary.trim() || original.durationSeconds !== scene.durationSeconds) persisted.push(await updateOutlineScene(storyId, scene.id, { title: scene.title.trim(), summary: scene.summary.trim(), durationSeconds: scene.durationSeconds }));
+          else persisted.push(scene);
         }
       }
-      const ordered = await reorderOutlineScenes(storyId, persisted.map(scene => scene.id));
+      await reorderOutlineScenes(storyId, persisted.map(scene => scene.id));
       const refreshed = await getOutline(storyId);
-      setOutline(refreshed); setScenes(ordered.length ? refreshed.scenes : []); setDeletedIds([]); setDirty(false);
+      setOutline(refreshed); setScenes(refreshed.scenes); setDeletedIds([]); setDirty(false);
     } catch (e) {
       setSaveError(e instanceof ApiError ? e.message : "We couldn't save your changes. Please try again.");
     } finally { setSaving(false); }
