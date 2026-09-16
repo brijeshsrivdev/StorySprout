@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation, AI Provider Integration, and Story Outline are validated. Story Outline is the current completed feature on `feature/story-outline`.
+**Snapshot:** Story Creation, AI Provider Integration, Story Outline, and Characters are implemented. Characters is the current feature on `feature/characters`; final CI validation is pending.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -15,114 +15,70 @@
 
 ## Story Creation
 **Status:** VALIDATED
-
 Specification: `docs/specifications/story-creation.md`
 Implementation memory: `docs/features/story-creation/implementation.md`
 
-Implemented scope:
-- Dashboard project list, empty state, loading/error states and Create Story.
-- AI/Blank mode selection.
-- Story Setup with idea, target age, duration, visual style and language.
-- Approved target-age values are exactly `3_5` (Ages 3–5), `6_8` (Ages 6–8), and `9_12` (Ages 9–12).
-- Project and Story persistence through the specified APIs.
-- Validation and reusable API error envelope.
-- Blank flow without AI invocation.
-- Provider-independent StoryGenerator with deterministic credential-free implementation.
-- AI generation status transitions and recoverable failure persistence.
-- Frontend unit/component tests, backend service tests, PostgreSQL/Testcontainers API tests, and Playwright E2E coverage.
+Implemented scope includes Dashboard, AI/Blank Story Setup, exact approved target ages, Project/Story persistence, deterministic AI fake, validation, recoverable generation failures, and frontend/backend/API/persistence/E2E tests.
 
 ## AI Provider Integration
 **Status:** VALIDATED
-
 Specification: `docs/specifications/ai-provider-integration.md`
 Implementation memory: `docs/features/ai-provider-integration/implementation.md`
 
-Implemented scope:
-- Spring AI 2.0.1 BOM and `spring-ai-starter-model-google-genai`.
-- Google GenAI behind the existing `StoryGenerator` boundary.
-- `ChatClient` as the adapter API; no direct `GoogleGenAiChatModel` use in StorySprout code.
-- Initial model `gemini-2.5-flash`, externally configurable through `spring.ai.google.genai.chat.model` / `GEMINI_MODEL`.
-- Gemini Developer API and Vertex AI configuration through Spring AI's documented Google GenAI properties.
-- Fake provider remains the default and requires no credentials.
-- Gemini adapter is conditional and therefore does not create a second active `StoryGenerator` in fake mode.
-- Dedicated prompt builder using idea, target age, duration, visual style and language.
-- Exact target-age validation remains `3_5`, `6_8`, `9_12`.
-- Typed structured output using Spring AI `ChatClient.entity(...).useProviderStructuredOutput()`.
-- Finite timeout with Java 21 virtual-thread execution and cancellation.
-- Bounded adapter retry budget with transient/permanent failure classification.
-- Spring AI retry layer configured to one attempt so adapter retries do not multiply with model-level retries.
-- Safe operational logging without prompts, generated content, credentials, headers or raw provider payloads.
-- No database, API, frontend, Composition, renderer, or StoryService contract changes.
-
-### Approved model decision
-The initial live Gemini model is explicitly approved as:
-
-```text
-gemini-2.5-flash
-```
-
-The retired models below are not used:
-
-```text
-gemini-2.0-flash
-gemini-2.0-flash-001
-```
-
-The model remains configuration-driven so a future supported model can be selected without changing StoryGenerator or StoryService.
+Spring AI 2.0.1 Google GenAI integration uses the provider-independent AI boundaries, existing ChatClient pattern, configurable `gemini-2.5-flash`, external credentials, finite timeout and bounded retry. Normal CI remains credential-free.
 
 ## Story Outline
 **Status:** VALIDATED
-
-Specification: `docs/specifications/story-outline.md`  
+Specification: `docs/specifications/story-outline.md`
 Implementation memory: `docs/features/story-outline/implementation.md`
 
-Implemented scope:
-- Dashboard/project Story navigation into Story Outline.
-- Story Creation now continues directly to the persisted Story Outline.
-- Story reference metadata and draft/idea display.
-- Deterministic fake `StoryOutlineGenerator` for credential-free CI.
-- Gemini Story Outline adapter using existing Spring AI `ChatClient`, Gemini configuration and reliability infrastructure.
-- PostgreSQL persistence through new `V3__story_outline.sql` migration.
-- Story Outline scene create/update/delete/reorder.
-- Positive integer planned-duration validation with no Story-target-derived maximum.
-- Target / Planned / Variance UI with under-target, approximately-on-target and over-target states.
-- Add/delete/reorder preserve unrelated scene durations.
-- Existing-outline regeneration blocked in V1.
-- E2E coverage for creation, persistence, variance and reorder behavior.
-- Scene Setup destination is a placeholder only; Scene Setup implementation has not started.
+Story Outline is a planning layer with ordered narrative scenes, CRUD, reorder, positive integer planning durations, Target/Planned/Variance display, deterministic fake generation and Gemini adapter. Exact timing remains future Editor/Timeline/Composition. Scene Setup remains a placeholder.
 
-### Story Outline timing boundary
-- Story target remains 60, 180 or 300 seconds.
-- Outline scene duration is a positive integer planning estimate.
-- Planned total may be below, approximately on, or above the Story target.
-- No automatic duration balancing exists.
-- Exact animation timing belongs to future Editor/Timeline/Composition.
+## Characters
+**Status:** IMPLEMENTED — final validation pending
+Specification: `docs/specifications/characters.md`
+Implementation memory: `docs/features/characters/implementation.md`
+
+Implemented scope:
+- Story Outline → Characters navigation.
+- Project-scoped reusable Character records.
+- Story–Character membership with duplicate prevention and cross-project validation.
+- Character create/edit/delete.
+- Removing Story membership preserves the reusable Project Character.
+- Referenced Project Characters cannot be deleted; API returns controlled conflict.
+- V1 fields: name, roleDescription, category, visualDescription, optional personality.
+- Categories: CHILD, ADULT, ANIMAL, FANTASY, OBJECT, OTHER.
+- Deterministic placeholder/avatar only; no image-generation or upload pipeline.
+- Provider-independent `CharacterGenerator` boundary.
+- Deterministic fake generator for credential-free CI.
+- Gemini Character adapter reuses existing Spring AI ChatClient, GeminiAiCallExecutor, GeminiAiProperties and configurable `gemini-2.5-flash`.
+- AI suggestions populate editable UI fields and are not persisted until explicit Create.
+- Characters → existing Scene Setup placeholder continuation.
+- No Composition, Timeline, animation, dialogue, audio, renderer or asset state is created.
 
 ## Persistence
-- Existing Flyway migrations remain unchanged.
-- `apps/api/src/main/resources/db/migration/V3__story_outline.sql` creates `story_outline_scenes` with Story FK, positive duration, nonblank bounded text, unique Story/order constraint and ordered index.
-- No AI credentials or generated media are persisted by Story Outline.
+- Existing Flyway migrations V1–V3 remain unchanged.
+- `V4__characters.sql` creates `characters` and `story_characters`.
+- Character records are owned by Projects; membership is many-to-many between Stories and Project Characters.
+- Character deletion is blocked while memberships exist.
+- Membership removal never deletes the Character.
 
 ## Validation status
 - Story Creation: PASS in merged CI.
 - AI Provider Integration: PASS in merged CI.
-- Story Outline frontend lint/typecheck/unit/build: PASS.
-- Story Outline backend compile/tests/integration tests: PASS.
-- PostgreSQL/Flyway validation: PASS through backend integration and E2E startup against PostgreSQL 18.
-- Story Outline Playwright E2E: PASS, including creation, duration variance, refresh persistence, generation and reorder duration preservation.
-- Renderer regression/build: PASS.
-- Normal CI remains credential-free and does not call the real Gemini API.
-- A real Gemini API smoke test is not part of normal CI.
+- Story Outline: PASS in merged CI.
+- Characters: validation pending on feature branch.
+- Real Gemini API smoke test: NOT RUN in normal CI by design.
 
 ## Not implemented
 - Scene Setup implementation.
-- Scenes as visual/Composition structures, characters, assets, editor/timeline, Composition editing.
+- Character image generation/upload and advanced asset management.
+- Scenes as visual/Composition structures, editor/timeline, Composition editing.
 - Voice/music/media generation.
 - Preview/render/FFmpeg/render jobs.
 - Direct YouTube publishing.
 - Authentication/authorization.
 - Payments/collaboration/production deployment.
-- Real Gemini API smoke test in CI.
 
 ## Architecture review
-Story Outline is a planning/content layer between Story and future Scene Setup. It does not create or modify Composition JSON, TimelineClip, SceneObject, animation, camera, asset placement, renderer state, or render jobs. AI remains a suggestion mechanism behind a capability-specific provider-independent interface. Existing Spring AI/Gemini infrastructure is reused rather than duplicated.
+Characters are a planning/reusable-identity layer between Story Outline and future Scene Setup. Project Characters are canonical creator-owned data and Story membership identifies which reusable characters a Story can use. No Character data enters `packages/editor-model` or Composition in SPEC-004. AI remains a suggestion mechanism behind a capability-specific provider-independent interface. Existing Spring AI/Gemini infrastructure is reused rather than duplicated.
