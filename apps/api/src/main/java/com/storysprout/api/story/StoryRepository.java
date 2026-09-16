@@ -21,6 +21,14 @@ public class StoryRepository {
     }
 
     public java.util.Optional<Story> findById(UUID id) {
-        return jdbc.query("SELECT id, project_id, title, idea, target_age, duration_minutes, visual_style, language, creation_mode, generation_status, draft_content, created_at, updated_at FROM stories WHERE id = ?", ps -> ps.setObject(1, id), (rs, n) -> new Story(rs.getObject("id", UUID.class), rs.getObject("project_id", UUID.class), rs.getString("title"), rs.getString("idea"), rs.getString("target_age"), rs.getInt("duration_minutes"), rs.getString("visual_style"), rs.getString("language"), StoryCreationMode.valueOf(rs.getString("creation_mode")), StoryGenerationStatus.valueOf(rs.getString("generation_status")), rs.getString("draft_content"), rs.getTimestamp("created_at").toInstant(), rs.getTimestamp("updated_at").toInstant())).stream().findFirst();
+        return jdbc.query("SELECT id, project_id, title, idea, target_age, duration_minutes, visual_style, language, creation_mode, generation_status, draft_content, created_at, updated_at FROM stories WHERE id = ?", ps -> ps.setObject(1, id), (rs, n) -> map(rs)).stream().findFirst();
+    }
+
+    public java.util.List<Story> findAllByProjectId(UUID projectId) {
+        return jdbc.query("SELECT id, project_id, title, idea, target_age, duration_minutes, visual_style, language, creation_mode, generation_status, draft_content, created_at, updated_at FROM stories WHERE project_id = ? ORDER BY updated_at DESC", ps -> ps.setObject(1, projectId), (rs, n) -> map(rs)).stream().toList();
+    }
+
+    private Story map(java.sql.ResultSet rs) throws java.sql.SQLException {
+        return new Story(rs.getObject("id", UUID.class), rs.getObject("project_id", UUID.class), rs.getString("title"), rs.getString("idea"), rs.getString("target_age"), rs.getInt("duration_minutes"), rs.getString("visual_style"), rs.getString("language"), StoryCreationMode.valueOf(rs.getString("creation_mode")), StoryGenerationStatus.valueOf(rs.getString("generation_status")), rs.getString("draft_content"), rs.getTimestamp("created_at").toInstant(), rs.getTimestamp("updated_at").toInstant());
     }
 }
