@@ -13,6 +13,7 @@ import com.storysprout.api.story.StoryGenerationResult;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.springframework.ai.chat.client.ChatClient;
 
 class GeminiStoryGeneratorChatClientTest {
@@ -42,12 +43,13 @@ class GeminiStoryGeneratorChatClientTest {
         StoryGenerationResult result = generator.generate(request);
 
         assertThat(result).isEqualTo(new StoryGenerationResult("Sharing Rabbit", "A rabbit learns to share."));
-        verify(requestSpec).user(org.mockito.ArgumentMatchers.argThat(prompt ->
-            prompt.contains("A rabbit learns to share.")
-                && prompt.contains("6_8")
-                && prompt.contains("3")
-                && prompt.contains("2D")
-                && prompt.contains("ENGLISH")));
+        ArgumentMatcher<String> completePrompt = prompt -> prompt != null
+            && prompt.contains("A rabbit learns to share.")
+            && prompt.contains("6_8")
+            && prompt.contains("3")
+            && prompt.contains("2D")
+            && prompt.contains("ENGLISH");
+        verify(requestSpec).user(org.mockito.ArgumentMatchers.argThat(completePrompt));
         verify(responseSpec).entity(eq(GeminiStoryResponse.class), any());
     }
 }
