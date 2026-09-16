@@ -24,11 +24,18 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await page.getByRole("button", { name: /Milo/ }).click();
   await page.getByRole("button", { name: /Wooden Chair/ }).click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
   await page.reload();
   await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page).toHaveURL(/\/stories\/.+\/editor\?scene=/);
 
-  // Editor is a client-loaded surface; wait for its stable shell before asserting scene content.
+  const editorResponse = page.waitForResponse(response =>
+    response.url().includes("/api/v1/stories/") && response.url().includes("/editor") && response.request().method() === "GET"
+  );
+  await page.waitForTimeout(500);
+  const response = await editorResponse;
+  expect(response.ok(), await response.text()).toBeTruthy();
+
   await expect(page.getByRole("heading", { name: "Properties" })).toBeVisible({ timeout: 15000 });
   await expect(page.getByText("CHARACTER", { exact: true })).toBeVisible({ timeout: 5000 });
   await expect(page.getByRole("main")).toContainText("1920 by 1080 logical stage");
