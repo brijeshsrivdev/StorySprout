@@ -16,7 +16,7 @@ test("creates an outline, shows planned duration and preserves it after refresh"
   await page.getByLabel("Scene 1 duration").fill("190");
   await page.getByRole("button", { name: "Save Changes" }).click();
 
-  await expect(page.getByText("Planned").locator("..")).toContainText("3:10");
+  await expect(page.getByText("Planned").locator("..").first()).toContainText("3:10");
   await expect(page.getByText("+0:10")).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Scene 1 title")).toHaveValue("A sharing lesson");
