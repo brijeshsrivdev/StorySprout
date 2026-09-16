@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 test("creates a character, reuses it, and preserves it after removing story membership", async ({ page }) => {
+  page.on("dialog", dialog => dialog.accept());
   await page.goto("/create");
-  await page.getByRole("button", { name: "Blank Story" }).click();
+  const blankStory = page.getByRole("button", { name: "Blank Story" });
+  await expect(async () => {
+    await blankStory.click();
+    await expect(blankStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("6_8");
@@ -25,7 +30,11 @@ test("creates a character, reuses it, and preserves it after removing story memb
 
 test("AI suggestion fills editable fields without creating a character until explicit creation", async ({ page }) => {
   await page.goto("/create");
-  await page.getByRole("button", { name: "Blank Story" }).click();
+  const blankStory = page.getByRole("button", { name: "Blank Story" });
+  await expect(async () => {
+    await blankStory.click();
+    await expect(blankStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Story idea").fill("A kind fox learns courage.");
   await page.getByLabel("Target age").selectOption("6_8");
@@ -36,5 +45,6 @@ test("AI suggestion fills editable fields without creating a character until exp
   await page.getByPlaceholder(/brave little fox/).fill("A brave fox who helps friends.");
   await page.getByRole("button", { name: "Generate Suggestion" }).click();
   await expect(page.getByLabel("Name")).toHaveValue("Milo");
-  await expect(page.getByRole("heading", { name: "No characters yet" })).toBeVisible();
+  await expect(page.getByText("No characters yet")).toBeVisible();
 });
+

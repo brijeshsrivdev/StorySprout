@@ -2,6 +2,9 @@ node_modules/
 .next/
 out/
 dist/
+target/
+**/target/
+*.class
 coverage/
 *.log
 .DS_Store
@@ -11,4 +14,12 @@ coverage/
 .idea/
 .vscode/
 *.iml
+.mvn/
 .mvn/wrapper/maven-wrapper.jar
+test-results/
+
+**/test-results/
+playwright-report/
+blob-report/
+*.tsbuildinfo
+
