@@ -1,8 +1,10 @@
 package com.storysprout.api.story;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "storysprout.ai.provider", havingValue = "fake", matchIfMissing = true)
 public class DeterministicStoryGenerator implements StoryGenerator {
     @Override
     public StoryGenerationResult generate(StoryGenerationRequest request) {
