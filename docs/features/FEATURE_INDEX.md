@@ -49,5 +49,6 @@ Important test files should also be mapped to the behavior they prove.
 | Feature | Status | Specification | Implementation | Tests | Major dependencies |
 |---|---|---|---|---|---|
 | Repository Foundation | IMPLEMENTED | Pre-SDD foundation | Foundation implementation is represented by repository history and current-state documentation | API health test + CI checks | Next.js, Spring Boot, PostgreSQL, MinIO |
+| Story Creation | SPECIFIED | `docs/specifications/story-creation.md` | Not implemented | Test scenarios defined in specification; no feature tests yet | Next.js, Spring Boot, PostgreSQL, `packages/shared-types`, `packages/validation`, internal StoryGenerator boundary |
 
 Do not create implementation documentation for functionality that has not actually been implemented and validated.
