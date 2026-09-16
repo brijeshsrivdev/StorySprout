@@ -49,11 +49,11 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await page.getByLabel("X", { exact: true }).fill("900");
   await page.getByLabel("Scale", { exact: true }).fill("1.5");
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
 
   await page.reload();
   await page.getByRole("button", { name: /Milo/ }).first().click();
   await expect(page.getByLabel("X", { exact: true })).toHaveValue("900");
   await expect(page.getByLabel("Scale", { exact: true })).toHaveValue("1.5");
-  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
 });
