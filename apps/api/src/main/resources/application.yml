@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: storysprout-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/storysprout}
+    username: ${DB_USERNAME:storysprout}
+    password: ${DB_PASSWORD:storysprout}
+server:
+  port: ${PORT:8080}

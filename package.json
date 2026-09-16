@@ -1,0 +1,19 @@
+{
+  "name": "storysprout",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@11",
+  "engines": { "node": ">=24 <25" },
+  "workspaces": ["apps/web", "services/renderer", "packages/shared-types", "packages/editor-model", "packages/validation"],
+  "scripts": {
+    "dev": "npm --workspace apps/web run dev",
+    "build": "npm run build:web && npm run build:renderer",
+    "build:web": "npm --workspace apps/web run build",
+    "build:renderer": "npm --workspace services/renderer run build",
+    "lint": "npm --workspace apps/web run lint",
+    "typecheck": "npm --workspace apps/web run typecheck && npm --workspace services/renderer run typecheck",
+    "test": "npm --workspace apps/web run test --if-present && npm --workspace services/renderer run test --if-present",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
+  }
+}
