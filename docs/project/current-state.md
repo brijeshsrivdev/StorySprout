@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation, AI Provider Integration, Story Outline, and Characters are implemented. Characters is the current feature on `feature/characters`; final CI validation is pending.
+**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, and Scene Setup are implemented. Scene Setup is awaiting final CI validation on `feature/scene-setup`.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -8,72 +8,55 @@
 - Java 21 / Spring Boot API in `apps/api`.
 - TypeScript renderer skeleton.
 - `packages/editor-model` Composition schema `1.0` remains unchanged.
-- `packages/shared-types` includes Story Creation domain types.
-- `packages/validation` remains the runtime validation boundary.
-- Docker Compose provides local PostgreSQL and MinIO.
+- PostgreSQL stores application metadata; MinIO is local media storage.
 - GitHub Actions CI validates web, API, renderer, and E2E.
 
-## Story Creation
-**Status:** VALIDATED
-Specification: `docs/specifications/story-creation.md`
-Implementation memory: `docs/features/story-creation/implementation.md`
+## Validated features
+- Story Creation — VALIDATED.
+- AI Provider Integration — VALIDATED.
+- Story Outline — VALIDATED.
+- Characters — VALIDATED.
 
-Implemented scope includes Dashboard, AI/Blank Story Setup, exact approved target ages, Project/Story persistence, deterministic AI fake, validation, recoverable generation failures, and frontend/backend/API/persistence/E2E tests.
+## Scene Setup
+**Status:** IMPLEMENTED — final CI validation pending
+Specification: `docs/specifications/scene-setup.md`
+Implementation memory: `docs/features/scene-setup/implementation.md`
 
-## AI Provider Integration
-**Status:** VALIDATED
-Specification: `docs/specifications/ai-provider-integration.md`
-Implementation memory: `docs/features/ai-provider-integration/implementation.md`
-
-Spring AI 2.0.1 Google GenAI integration uses the provider-independent AI boundaries, existing ChatClient pattern, configurable `gemini-2.5-flash`, external credentials, finite timeout and bounded retry. Normal CI remains credential-free.
-
-## Story Outline
-**Status:** VALIDATED
-Specification: `docs/specifications/story-outline.md`
-Implementation memory: `docs/features/story-outline/implementation.md`
-
-Story Outline is a planning layer with ordered narrative scenes, CRUD, reorder, positive integer planning durations, Target/Planned/Variance display, deterministic fake generation and Gemini adapter. Exact timing remains future Editor/Timeline/Composition. Scene Setup remains a placeholder.
-
-## Characters
-**Status:** IMPLEMENTED — final validation pending
-Specification: `docs/specifications/characters.md`
-Implementation memory: `docs/features/characters/implementation.md`
-
-Implemented scope:
-- Story Outline → Characters navigation.
-- Project-scoped reusable Character records.
-- Story–Character membership with duplicate prevention and cross-project validation.
-- Character create/edit/delete.
-- Removing Story membership preserves the reusable Project Character.
-- Referenced Project Characters cannot be deleted; API returns controlled conflict.
-- V1 fields: name, roleDescription, category, visualDescription, optional personality.
-- Categories: CHILD, ADULT, ANIMAL, FANTASY, OBJECT, OTHER.
-- Deterministic placeholder/avatar only; no image-generation or upload pipeline.
-- Provider-independent `CharacterGenerator` boundary.
-- Deterministic fake generator for credential-free CI.
-- Gemini Character adapter reuses existing Spring AI ChatClient, GeminiAiCallExecutor, GeminiAiProperties and configurable `gemini-2.5-flash`.
-- AI suggestions populate editable UI fields and are not persisted until explicit Create.
-- Characters → existing Scene Setup placeholder continuation.
-- No Composition, Timeline, animation, dialogue, audio, renderer or asset state is created.
+Implemented:
+- One Outline Scene at a time using stable Outline Scene ID.
+- Read-only Story/Outline scene context including planned duration.
+- One persisted Scene Setup per Outline Scene; empty setup is valid.
+- Controlled deterministic background preset catalog with select/replace/remove.
+- Existing Story Character selection with duplicate prevention.
+- Scene-local controlled prop instances; repeated presets supported.
+- Manual ordered Character/Narrator dialogue.
+- Fixed action intents: IDLE, TALK, WALK, RUN, WAVE, SIT, JUMP.
+- Explicit Save Changes for editable setup sections.
+- Previous/Next scene navigation.
+- Editor placeholder handoff only.
+- Outline deletion removes Scene Setup before deleting the Outline Scene in the same transaction.
+- No AI capability added.
 
 ## Persistence
-- Existing Flyway migrations V1–V3 remain unchanged.
-- `V4__characters.sql` creates `characters` and `story_characters`.
-- Character records are owned by Projects; membership is many-to-many between Stories and Project Characters.
-- Character deletion is blocked while memberships exist.
-- Membership removal never deletes the Character.
+- Existing migrations V1–V4 remain unchanged.
+- `V5__scene_setup.sql` creates `scene_setups`, `scene_setup_characters`, `scene_setup_props`, `scene_setup_dialogue`, and `scene_setup_actions`.
+- Scene Setup has no duration field.
+- Child rows cascade from their Scene Setup root.
+
+## Composition / Renderer boundary
+`packages/editor-model` Composition schema `1.0` is unchanged. Scene Setup does not persist transforms, exact timing, keyframes, camera state, audio timing, Timeline clips, or renderer fields. Renderer code is unchanged.
 
 ## Validation status
 - Story Creation: PASS in merged CI.
 - AI Provider Integration: PASS in merged CI.
 - Story Outline: PASS in merged CI.
-- Characters: validation pending on feature branch.
-- Real Gemini API smoke test: NOT RUN in normal CI by design.
+- Characters: PASS in merged CI.
+- Scene Setup: implementation and tests committed; final CI validation pending.
+- Real Gemini smoke test: NOT RUN and not applicable to Scene Setup.
 
 ## Not implemented
-- Scene Setup implementation.
+- Visual Editor/Timeline/Composition persistence/editing.
 - Character image generation/upload and advanced asset management.
-- Scenes as visual/Composition structures, editor/timeline, Composition editing.
 - Voice/music/media generation.
 - Preview/render/FFmpeg/render jobs.
 - Direct YouTube publishing.
@@ -81,4 +64,4 @@ Implemented scope:
 - Payments/collaboration/production deployment.
 
 ## Architecture review
-Characters are a planning/reusable-identity layer between Story Outline and future Scene Setup. Project Characters are canonical creator-owned data and Story membership identifies which reusable characters a Story can use. No Character data enters `packages/editor-model` or Composition in SPEC-004. AI remains a suggestion mechanism behind a capability-specific provider-independent interface. Existing Spring AI/Gemini infrastructure is reused rather than duplicated.
+Scene Setup is a preparation model between Characters and the future Editor. Story Outline remains authoritative for scene planning; Characters remains authoritative for reusable identity and Story membership; Editor/Timeline will own Composition and exact timing; Renderer consumes Composition JSON. Scene Setup does not create or modify Composition.
