@@ -6,6 +6,8 @@ import com.storysprout.api.character.CharacterNotFoundException;
 import com.storysprout.api.outline.OutlineConflictException;
 import com.storysprout.api.outline.OutlineGenerationException;
 import com.storysprout.api.outline.OutlineNotFoundException;
+import com.storysprout.api.scene.SceneSetupConflictException;
+import com.storysprout.api.scene.SceneSetupNotFoundException;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,5 +25,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(CharacterNotFoundException.class) ResponseEntity<ApiErrorResponse> characterNotFound(CharacterNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("CHARACTER_NOT_FOUND",ex.getMessage(),List.of()));}
     @ExceptionHandler(CharacterConflictException.class) ResponseEntity<ApiErrorResponse> characterConflict(CharacterConflictException ex){return ResponseEntity.status(409).body(ApiErrorResponse.of("CHARACTER_CONFLICT",ex.getMessage(),List.of()));}
     @ExceptionHandler(CharacterGenerationException.class) ResponseEntity<ApiErrorResponse> characterGeneration(CharacterGenerationException ex){return ResponseEntity.status(422).body(ApiErrorResponse.of("CHARACTER_GENERATION_FAILED",ex.getMessage(),List.of()));}
+    @ExceptionHandler(SceneSetupNotFoundException.class) ResponseEntity<ApiErrorResponse> sceneSetupNotFound(SceneSetupNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("NOT_FOUND",ex.getMessage(),List.of()));}
+    @ExceptionHandler(SceneSetupConflictException.class) ResponseEntity<ApiErrorResponse> sceneSetupConflict(SceneSetupConflictException ex){return ResponseEntity.status(409).body(ApiErrorResponse.of("SCENE_SETUP_CONFLICT",ex.getMessage(),List.of()));}
     @ExceptionHandler(Exception.class) ResponseEntity<ApiErrorResponse> unexpected(Exception ex){return ResponseEntity.internalServerError().body(ApiErrorResponse.of("INTERNAL_ERROR","An unexpected error occurred.",List.of()));}
 }
