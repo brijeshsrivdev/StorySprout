@@ -86,7 +86,7 @@ export interface TimelineClip {
 
 ### Findings
 
-The existing model already provides the minimum fields required for basic V1 visual editing:
+The existing model already provides most fields required for basic V1 visual editing:
 
 - `Composition.schemaVersion` — explicit compatibility boundary.
 - `Composition.projectId` — project ownership.
@@ -103,11 +103,23 @@ The existing model already provides the minimum fields required for basic V1 vis
 - `SceneObject.visible` — visibility.
 - `TimelineClip` already represents future object/dialogue/audio/music/SFX timing, but SPEC-006 does not create or edit clips.
 
+The existing shared asset model also distinguishes `CHARACTER`, `BACKGROUND`, and `PROP` asset types. However, V1 Characters and Props may use deterministic placeholders and are not guaranteed to resolve through persisted Asset records. Therefore `assetId` is **not** a reliable semantic discriminator for Character vs Prop in the Editor.
+
 ### Schema decision
 
-**No Composition schema change is required for basic V1 Editor behavior.** The existing model is sufficient for background, movable/scalable objects, visibility, rotation representation, ordering, and future timing compatibility.
+**A Composition schema change is required for V1 Editor object identity.**
 
-SPEC-006 therefore does not change `packages/editor-model`, `createEmptyComposition()`, or add an `objectType` field. Character-versus-Prop context is supplied by the source-object mapping/editor presentation rather than by expanding canonical schema `1.0`.
+`SceneObject` must gain:
+
+```ts
+objectType: "CHARACTER" | "PROP";
+```
+
+This is canonical Composition state. It is not inferred from asset IDs, names, URLs, placeholder conventions, or an external mapping.
+
+Because the current executable Composition schema is `1.0`, the Editor implementation must use **Composition schema `1.1`** and define an explicit `1.0 → 1.1` compatibility/migration rule before changing executable Composition code. SPEC-006 does not silently extend schema `1.0`.
+
+`assetId` remains the visual asset reference; it does not determine semantic object type.
 
 A future requirement for anchors, dimensions, richer object semantics, animation state, or other canonical data must be separately specified and must include an explicit Composition compatibility decision if the model changes.
 
@@ -166,16 +178,17 @@ Initialization occurs **once per Outline Scene**, only when no Composition exist
 | Outline Scene title | `Scene.name` |
 | Outline planned duration | Initial `Scene.durationMs`; composition duration basis for this scene, while exact timing remains future Timeline-owned |
 | Background preset | `Scene.background.assetId` when selected |
-| Selected Story Characters | One `SceneObject` per selected Character |
-| Scene-local Prop instances | One `SceneObject` per persisted Prop instance |
-| Dialogue lines | Not converted to `TimelineClip`; retained as Scene Setup preparation data for future Dialogue/Audio/Timeline work |
-| Action intents | Not converted to animation/timeline clips; retained as preparation intent for future animation behavior |
+| Selected Story Characters | One `SceneObject` per selected Character with `objectType: "CHARACTER"` |
+| Scene-local Prop instances | One `SceneObject` per persisted Prop instance with `objectType: "PROP"` |
+| Dialogue lines | Remain Scene Setup data; not copied into Composition or `TimelineClip` |
+| Action intents | Remain Scene Setup data; not copied into Composition or `TimelineClip` |
 
 ### Character/Prop object creation
 
 Each initialized Character or Prop creates a Composition `SceneObject` with:
 
 - new stable Composition object UUID;
+- `objectType: "CHARACTER"` for a Character or `objectType: "PROP"` for a Prop;
 - source visual `assetId` when one exists;
 - deterministic initial `x`, `y`, and `scale`;
 - `rotation: 0`;
@@ -189,7 +202,9 @@ Initial placement must be deterministic and should avoid obvious overlap where p
 
 - Outline Scene ID remains the stable preparation-to-Composition linkage.
 - Composition `SceneObject.id` is the canonical editable object identity.
-- Character ID / Prop instance ID is source context used during initialization and UI mapping; it is not added to Composition schema `1.0`.
+- Composition `SceneObject.objectType` is the canonical semantic distinction between Character and Prop.
+- Character ID / Prop instance ID is source context used during initialization and UI mapping; it is not encoded through ambiguous string conventions.
+- `assetId` identifies the visual asset only and is not used as the Character/Prop type discriminator.
 
 The initializer must ensure one source item produces one Composition object during first initialization. Reopen always loads existing Composition and never creates another object.
 
@@ -225,16 +240,18 @@ This directly applies ADR-001 and the existing editor-composition architecture.
 
 ### Stage
 
-V1 uses a fixed **16:9** stage matching the foundation's `1920 × 1080` Composition dimensions.
+V1 uses a fixed **16:9 logical stage of exactly 1920 × 1080 units**, matching the foundation's Composition dimensions.
 
-Canonical transforms use logical 1920×1080 stage coordinates, not DOM pixels. The browser may scale the stage to fit the viewport, but viewport resizing never rewrites Composition coordinates.
+Canonical transforms use this fixed logical stage coordinate system, not DOM pixels and not CSS/device pixels. The browser may scale the rendered canvas to fit the viewport, but viewport/browser scaling never rewrites Composition coordinates.
+
+The specification intentionally does **not** call these coordinates "resolution-independent". They are logical coordinates in the fixed 1920 × 1080 canonical stage.
 
 Logical ranges for V1:
 
 - `x: 0..1920`
 - `y: 0..1080`
 
-Origin is top-left. The object anchor is kept within stage bounds during direct dragging. Because schema `1.0` has no object width/height, full bounding-box containment is deferred; a rendered object may partially extend beyond the stage.
+Origin is top-left. The object anchor is kept within stage bounds during direct dragging. Because schema `1.1` still has no object width/height, full bounding-box containment is deferred; a rendered object may partially extend beyond the stage.
 
 ### Supported canvas behavior
 
@@ -287,16 +304,17 @@ A clearly labelled non-functional `Timeline — Coming next` placeholder may be 
 
 V1 editable object types:
 
-- **Character** — a Story Character already belonging to the Story.
-- **Prop** — a scene-local controlled Prop preset instance or a newly added controlled preset.
+- **Character** — a Story Character already belonging to the Story, represented canonically with `objectType: "CHARACTER"`.
+- **Prop** — a scene-local controlled Prop preset instance or a newly added controlled preset, represented canonically with `objectType: "PROP"`.
 
 Background remains scene-level `Scene.background`.
 
-Because schema `1.0` has no `objectType`, the Editor maintains source/type context outside the canonical Composition document. No object-type field is added in SPEC-006.
+The Editor must not infer semantic object type from `assetId`. The canonical Composition schema `1.1` carries the explicit `objectType` field.
 
 Canonical object fields edited by the Editor:
 
 - `id`
+- `objectType`
 - `assetId`
 - `x`
 - `y`
@@ -357,7 +375,7 @@ Show current background preset/name and replace/remove controls from the existin
 
 ### Initial objects
 
-Scene Setup Characters and Prop instances are initialized into Composition once.
+Scene Setup Characters and Prop instances are initialized into Composition once with explicit `objectType` values.
 
 ### Adding in Editor
 
@@ -368,7 +386,7 @@ Sources are strictly:
 - Characters from the Story's existing Character membership.
 - Props from the existing controlled Scene Setup prop preset catalog.
 
-Adding an object creates a new Composition `SceneObject` with a new object ID and deterministic default transform. It does not create Character records, Story membership, Prop catalog records, or Scene Setup rows.
+Adding an object creates a new Composition `SceneObject` with a new object ID, explicit `objectType`, and deterministic default transform. It does not create Character records, Story membership, Prop catalog records, or Scene Setup rows.
 
 For a newly added Prop, the editor object is canonical Composition state; it does not create a persisted Scene Setup Prop instance.
 
@@ -435,7 +453,7 @@ Controls must have accessible names and must not depend on hover-only discoverab
 
 SPEC-006 is not Timeline.
 
-The existing `Scene.timeline: TimelineClip[]` remains part of schema `1.0`, but is **empty and inactive** for this feature.
+The existing `Scene.timeline: TimelineClip[]` remains part of the Composition model, but is **empty and inactive** for this feature.
 
 SPEC-006 does not create/edit playheads, clips, timing, clip resizing, exact dialogue timing, animation keyframes, audio timing, music timing, or SFX timing.
 
@@ -443,21 +461,32 @@ The Editor prepares visual Composition state for the future Timeline.
 
 ## 18. Animation boundary
 
-Scene Setup action intents remain preparation metadata:
+Scene Setup action intents remain preparation data:
 
 ```text
 IDLE, TALK, WALK, RUN, WAVE, SIT, JUMP
 ```
 
-SPEC-006 does not generate, play, or edit animation. Action intents are not converted into `TimelineClip` records because schema `1.0` does not define an approved animation/action clip semantic and animation timing is out of scope.
+SPEC-006 does not generate, play, or edit animation. Action intents are not copied into Composition or converted into `TimelineClip` records because the current Composition model does not define an approved animation/action clip semantic and animation timing is out of scope.
 
 The Editor may show a read-only action-intent summary but must not imply the intent is already animated.
 
+A future Animation/Timeline feature may explicitly read the Scene Setup action intent for the same `storyId + outlineSceneId` and define the canonical Composition/Timeline representation. That conversion is a separate feature and is not automatic synchronization.
+
 ## 19. Dialogue boundary
 
-Scene Setup dialogue remains preparation data. It is not converted into Timeline clips, voice assets, or audio state.
+Scene Setup dialogue remains preparation data:
+
+```text
+Scene Setup dialogue → remains Scene Setup data
+Composition V1 → does not contain dialogue
+```
+
+It is not converted into Timeline clips, voice assets, audio state, or hidden Composition metadata.
 
 Editor does not edit dialogue text and does not generate voice. A read-only dialogue summary may be shown as context, but canonical editable dialogue remains Scene Setup-owned until a separately specified Dialogue/Audio/Timeline feature defines its Composition representation.
+
+A future Dialogue/Audio/Timeline feature may explicitly read the persisted Scene Setup dialogue for the same `storyId + outlineSceneId` and define the canonical Composition/Timeline representation. That conversion is a separate feature and is not automatic synchronization.
 
 ## 20. API / persistence contract
 
@@ -554,9 +583,9 @@ The server must not blindly persist arbitrary JSON.
 
 ### Composition
 
-- `schemaVersion === "1.0"`;
+- `schemaVersion === "1.1"` for Editor-created/edited Composition;
 - `projectId` matches request context;
-- supported `width/height` and 16:9 foundation;
+- supported `width/height` and fixed 16:9 logical stage;
 - V1-created composition uses `30` fps;
 - `durationMs >= 0`;
 - unique scene IDs;
@@ -568,12 +597,14 @@ The server must not blindly persist arbitrary JSON.
 
 - Composition scene corresponds to requested Outline Scene;
 - background reference resolves to an allowed controlled background when present;
-- object sources resolve to allowed Story Characters or controlled Props.
+- object sources resolve to allowed Story Characters or controlled Props;
+- dialogue and action intent are not required Composition fields.
 
 ### SceneObject
 
 - ID present and unique;
-- asset/source resolves to permitted Character/Prop context;
+- `objectType` is exactly `CHARACTER` or `PROP`;
+- `assetId` is a visual asset reference and is not used to infer `objectType`;
 - `x/y` finite and within logical stage bounds;
 - `scale` finite and `0.25..3.0`;
 - `rotation` finite and `0` for V1 interactive edits;
@@ -591,26 +622,27 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 
 - **T-COMP-01:** Empty Scene Setup initializes a valid empty Composition Scene.
 - **T-COMP-02:** Background maps to `Scene.background.assetId`.
-- **T-COMP-03:** Each selected Story Character creates exactly one Composition object.
-- **T-COMP-04:** Each Scene Setup Prop instance creates exactly one Composition object.
+- **T-COMP-03:** Each selected Story Character creates exactly one Composition object with `objectType: "CHARACTER"`.
+- **T-COMP-04:** Each Scene Setup Prop instance creates exactly one Composition object with `objectType: "PROP"`.
 - **T-COMP-05:** Repeated initialization is idempotent and never duplicates objects.
 - **T-COMP-06:** Stable Outline Scene ID links preparation to Composition.
 - **T-COMP-07:** Initialization persists atomically.
 - **T-COMP-08:** Existing Composition reopens unchanged.
-- **T-COMP-09:** Schema `1.0` is accepted; unsupported schema versions are rejected.
+- **T-COMP-09:** Editor-created Composition uses schema `1.1`; unsupported schema versions are rejected.
+- **T-COMP-10:** Character/Prop semantic identity is never inferred from `assetId`.
 
 ### Editor UI
 
 - **T-UI-01:** Editor loads context and Composition.
 - **T-UI-02:** Background renders.
-- **T-UI-03:** Character/Prop objects render and can be selected.
+- **T-UI-03:** Character/Prop objects render according to explicit `objectType`.
 - **T-UI-04:** Selection indication is visible and accessible.
 - **T-UI-05:** Dragging updates logical position.
 - **T-UI-06:** Scaling updates `0.25..3.0`.
 - **T-UI-07:** Visibility toggle updates state.
 - **T-UI-08:** Delete removes only the Composition object.
-- **T-UI-09:** Add Character uses Story Character source.
-- **T-UI-10:** Add Prop uses controlled preset source.
+- **T-UI-09:** Add Character uses Story Character source and `objectType: "CHARACTER"`.
+- **T-UI-10:** Add Prop uses controlled preset source and `objectType: "PROP"`.
 - **T-UI-11:** Layer operations preserve identity and change only array order.
 - **T-UI-12:** Properties panel edits supported values without Character/asset CRUD.
 - **T-UI-13:** Empty scene is usable.
@@ -625,6 +657,7 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 - **T-BOUNDARY-03:** Character/Prop Scene Setup changes do not automatically mutate Composition.
 - **T-BOUNDARY-04:** Background Scene Setup changes do not automatically mutate Composition.
 - **T-BOUNDARY-05:** Dialogue/action changes do not create Composition Timeline data.
+- **T-BOUNDARY-06:** Future Dialogue/Animation consumption is not represented as hidden Composition metadata in SPEC-006.
 
 ### API
 
@@ -640,6 +673,7 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 - **T-API-10:** Invalid Outline Scene returns 404.
 - **T-API-11:** Malformed Composition is rejected without partial persistence.
 - **T-API-12:** Persistence failure does not report false success.
+- **T-API-13:** Missing/invalid `objectType` is rejected.
 
 ### Database / integration
 
@@ -656,7 +690,7 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 - **T-E2E-01:** Story → Outline → Characters → Scene Setup → configure scene → Open Editor → verify initial Composition.
 - **T-E2E-02:** Move Character → save → reload → position persists.
 - **T-E2E-03:** Resize Character → save → reload → scale persists.
-- **T-E2E-04:** Add Prop → save → reload → object persists.
+- **T-E2E-04:** Add Prop → save → reload → object persists with explicit Prop identity.
 - **T-E2E-05:** Delete object → save → reload → only Composition object is removed.
 - **T-E2E-06:** Change layer order → save → reload → order persists.
 - **T-E2E-07:** Change Scene Setup after Composition exists → reopen Editor → Composition remains unchanged.
@@ -669,7 +703,7 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 - **T-REG-02:** Story Outline remains green.
 - **T-REG-03:** Characters remains green.
 - **T-REG-04:** Scene Setup remains green.
-- **T-REG-05:** Renderer build/health remains green and its input semantics remain Composition JSON.
+- **T-REG-05:** Renderer build/health remains green and its input semantics remain versioned Composition JSON.
 
 ## 25. Acceptance criteria
 
@@ -678,17 +712,17 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 - **AC-01:** Valid Outline Scene opens Editor using `storyId + outlineSceneId`.
 - **AC-02:** Empty Scene Setup creates a valid empty Composition Scene.
 - **AC-03:** Background maps to scene-level Composition background.
-- **AC-04:** Selected Story Characters map to one Composition object each.
-- **AC-05:** Scene Setup Prop instances map to one Composition object each.
+- **AC-04:** Selected Story Characters map to one Composition object each with `objectType: "CHARACTER"`.
+- **AC-05:** Scene Setup Prop instances map to one Composition object each with `objectType: "PROP"`.
 - **AC-06:** Initialization occurs only when Composition is absent.
 - **AC-07:** Reopen never duplicates objects.
 - **AC-08:** Outline Scene identity remains stable.
 
 ### Canvas / editing
 
-- **AC-09:** Editor renders fixed 16:9 stage.
-- **AC-10:** Character/Prop can be selected.
-- **AC-11:** Dragging changes logical `x/y`.
+- **AC-09:** Editor renders fixed 16:9 logical 1920×1080 stage.
+- **AC-10:** Character/Prop can be selected and their semantic type is explicit in Composition.
+- **AC-11:** Dragging changes logical `x/y` in the fixed stage coordinate system.
 - **AC-12:** Resizing changes `scale` within `0.25..3.0`.
 - **AC-13:** Visibility can be toggled.
 - **AC-14:** Delete removes only Composition object.
@@ -716,8 +750,8 @@ Add operations reject cross-Story Characters and Props outside the approved cont
 
 - **AC-28:** No Timeline clips are created/edited.
 - **AC-29:** No animation playback/generation is implemented.
-- **AC-30:** Dialogue is not converted to audio/timeline state.
-- **AC-31:** Composition schema remains `1.0` in the implementation of this specification.
+- **AC-30:** Dialogue and action intent remain Scene Setup data and are not copied into Composition V1.
+- **AC-31:** Editor-created/edited Composition uses schema `1.1`, with explicit `1.0 → 1.1` compatibility/migration behavior defined before executable schema changes are implemented.
 
 ## 26. V1 usability target
 
@@ -733,7 +767,7 @@ Included:
 - one-time Scene Setup → Composition initialization;
 - persisted canonical Composition JSON;
 - desktop 16:9 canvas;
-- Character and Prop objects;
+- Character and Prop objects with explicit semantic `objectType`;
 - scene-level background;
 - selection;
 - move;
@@ -750,6 +784,12 @@ Included:
 - stable scene/object identity handling;
 - usable empty scene;
 - controlled missing-reference behavior.
+
+Included at specification level, but not yet implemented:
+
+- Composition schema `1.1` with `SceneObject.objectType`;
+- explicit `1.0 → 1.1` compatibility/migration behavior;
+- Composition persistence root.
 
 ## 28. Explicitly out of scope
 
@@ -799,12 +839,13 @@ These are implementation-level details that do not change the approved boundary:
 
 1. Exact deterministic default placement algorithm for multiple initialized objects.
 2. Exact placeholder rendering for Characters/Props without final visual assets.
-3. Exact canvas interaction library/implementation, provided it preserves the logical transform model.
+3. Exact canvas interaction library/implementation, provided it preserves the fixed logical 1920×1080 transform model.
 4. Exact API DTO names around the existing response envelope.
 5. Whether the non-functional Timeline placeholder is shown.
 6. Exact missing-reference recovery UI, provided there is no silent substitution.
+7. Exact `1.0 → 1.1` compatibility/migration implementation, provided it is explicitly defined before executable schema changes and does not silently infer Character/Prop type.
 
-No unresolved question permits a Composition schema change, Timeline behavior, or automatic Scene Setup synchronization without a new decision/specification.
+No unresolved question permits a further Composition schema change, Timeline behavior, or automatic Scene Setup synchronization without a new decision/specification.
 
 ## 30. Relevant architectural decisions
 
@@ -818,5 +859,6 @@ Existing ADRs remain authoritative:
 - ADR-009 — V1 is web desktop first.
 - ADR-011 — Avoid premature infrastructure.
 - ADR-012 — SDD + TDD + feature implementation memory.
+- ADR-014 — Composition SceneObject carries explicit semantic object type.
 
-SPEC-006 does not require a new ADR because it applies existing decisions without changing the Composition schema or renderer contract.
+ADR-014 is required because the clarification pass determined that the existing `assetId` model is not a reliable Character/Prop discriminator and therefore a canonical schema change is necessary. Implementation remains deferred.
