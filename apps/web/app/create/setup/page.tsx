@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import Link from "next/link";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, createStory } from "../../../lib/api";
 
@@ -9,7 +10,9 @@ const durations = [1, 3, 5] as const;
 const styles = [["2D", "2D"], ["3D", "3D"], ["HYBRID", "Hybrid"]] as const;
 const languages = [["ENGLISH", "English"], ["HINDI", "Hindi"]] as const;
 
-export default function StorySetupPage() {
+export default function StorySetupPage() { return <Suspense fallback={<main className="min-h-screen bg-slate-50 p-12"><div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">Loading story setup…</div></main>}><StorySetupForm /></Suspense>; }
+
+function StorySetupForm() {
   const router = useRouter(); const params = useSearchParams();
   const projectId = params.get("projectId") ?? ""; const mode = params.get("mode") === "AI" ? "AI" : "BLANK";
   const [idea, setIdea] = useState(""); const [targetAge, setTargetAge] = useState(""); const [durationMinutes, setDurationMinutes] = useState<1 | 3 | 5>(3); const [visualStyle, setVisualStyle] = useState("2D"); const [language, setLanguage] = useState("ENGLISH");
@@ -20,7 +23,7 @@ export default function StorySetupPage() {
     catch (e) { const apiError = e instanceof ApiError ? e : null; setError(apiError?.status === 422 ? "Story generation failed. Your setup was saved. Try again when you're ready." : "We couldn't save your story. Please try again."); setSaving(false); }
   }
 
-  return <main className="min-h-screen bg-slate-50"><div className="mx-auto max-w-3xl px-8 py-12"><a href="/create" className="text-sm font-medium text-slate-500 hover:text-slate-900">← Start over</a><div className="mt-10"><p className="text-sm font-semibold text-indigo-600">STORY SETUP · {mode === "AI" ? "AI" : "BLANK"}</p><h1 className="mt-2 text-4xl font-bold">Tell us about your story</h1><p className="mt-3 text-slate-600">A few choices are all you need to get started.</p></div>
+  return <main className="min-h-screen bg-slate-50"><div className="mx-auto max-w-3xl px-8 py-12"><Link href="/create" className="text-sm font-medium text-slate-500 hover:text-slate-900">← Start over</Link><div className="mt-10"><p className="text-sm font-semibold text-indigo-600">STORY SETUP · {mode === "AI" ? "AI" : "BLANK"}</p><h1 className="mt-2 text-4xl font-bold">Tell us about your story</h1><p className="mt-3 text-slate-600">A few choices are all you need to get started.</p></div>
     <form onSubmit={submit} className="mt-10 space-y-7 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
       <div><label htmlFor="idea" className="text-sm font-semibold">Story idea</label><textarea id="idea" aria-describedby={fieldError ? "setup-error" : undefined} value={idea} onChange={e => setIdea(e.target.value)} placeholder="A little rabbit learns to share…" rows={4} className="mt-2 w-full rounded-xl border border-slate-300 p-4 outline-none focus:border-indigo-500" /></div>
       <div><label htmlFor="target-age" className="text-sm font-semibold">Target age</label><select id="target-age" value={targetAge} onChange={e => setTargetAge(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3"><option value="">Select an age group</option>{ages.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></div>
