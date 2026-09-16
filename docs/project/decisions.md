@@ -77,5 +77,20 @@ Reliability uses a deliberate two-layer boundary: Spring AI's model-level retry 
 
 This implementation does not change StoryGenerator, StoryService, Story Creation API contracts, database schema, Composition, renderer behavior, or product scope. Story Outline remains out of scope.
 
+## ADR-014 — Composition SceneObject carries explicit semantic object type
+**Status:** Accepted — implementation deferred to SPEC-006
+
+The current Composition schema `1.0` has no explicit Character-vs-Prop identity on `SceneObject`. Although the shared asset model has `CHARACTER` and `PROP` asset types, V1 Character/Prop visuals are not guaranteed to resolve through persisted Asset records because deterministic placeholders are valid. Therefore `SceneObject.assetId` is not a reliable semantic discriminator.
+
+SPEC-006 requires an explicit canonical `SceneObject.objectType` with the values `CHARACTER` or `PROP`. This is a Composition semantic change and therefore requires Composition schema `1.1` rather than silently extending schema `1.0`.
+
+The object type is assigned during Scene Setup → Composition initialization and when Editor adds an object. It is part of Composition JSON; no hidden external SceneObject-to-type mapping is permitted.
+
+Dialogue and action intent remain Scene Setup preparation data in V1 and are not copied into Composition. Future Dialogue/Audio/Animation/Timeline features may explicitly read Scene Setup data by the stable Story + Outline Scene identity and define their own canonical Composition/Timeline representation. This does not create hidden Composition metadata or automatic synchronization.
+
+The canonical Editor coordinate system remains a fixed logical `1920 × 1080` stage. Browser/CSS scaling changes presentation only; it does not rewrite Composition coordinates.
+
+Implementation must define the `1.0 → 1.1` compatibility/migration behavior before changing the executable Composition model. No application code, Composition code, migration, API, test, or renderer implementation is included in this specification clarification pass.
+
 ## Changing a decision
 Record the reason, affected components, migration/compatibility implications, and the new decision before or alongside implementation where practical.
