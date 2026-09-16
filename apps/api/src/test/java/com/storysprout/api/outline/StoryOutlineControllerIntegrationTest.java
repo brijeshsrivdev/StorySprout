@@ -44,7 +44,8 @@ class StoryOutlineControllerIntegrationTest {
         HttpResponse<String> generated = request("POST", "/api/v1/stories/" + storyId + "/outline/generate", null);
         assertThat(generated.statusCode()).isEqualTo(201); assertThat(generated.body()).contains("\"plannedDurationSeconds\":190").contains("\"varianceSeconds\":10");
         String sceneId = extractId(request("POST", "/api/v1/stories/" + storyId + "/outline-scenes", "{\"title\":\"Five\",\"summary\":\"Fifth\",\"durationSeconds\":20}").body());
-        assertThat(request("PATCH", "/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId, "{\"title\":\"Five Updated\",\"summary\":\"Fifth updated\",\"durationSeconds\":30}").statusCode()).isEqualTo(200);
+        HttpResponse<String> updated = request("PATCH", "/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId, "{\"title\":\"Five Updated\",\"summary\":\"Fifth updated\",\"durationSeconds\":30}");
+        assertThat(updated.statusCode()).withFailMessage(updated.body()).isEqualTo(200);
         assertThat(request("GET", "/api/v1/stories/" + storyId + "/outline-scenes", null).body()).contains("\"plannedDurationSeconds\":220").contains("\"varianceSeconds\":40");
         assertThat(request("DELETE", "/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId, null).statusCode()).isEqualTo(200);
         String finalBody = request("GET", "/api/v1/stories/" + storyId + "/outline-scenes", null).body();
@@ -56,7 +57,7 @@ class StoryOutlineControllerIntegrationTest {
         when(generator.generate(any())).thenReturn(new StoryOutlineGenerationResult(List.of(new GeneratedOutlineScene("One", "First", 40), new GeneratedOutlineScene("Two", "Second", 80))));
         String body = request("POST", "/api/v1/stories/" + storyId + "/outline/generate", null).body(); Matcher ids = Pattern.compile("\"id\":\"([0-9a-f-]{36})\"").matcher(body); ids.find(); ids.find(); String first = ids.group(1); ids.find(); String second = ids.group(1);
         HttpResponse<String> response = request("PATCH", "/api/v1/stories/" + storyId + "/outline-scenes/reorder", "{\"sceneIds\":[\"" + second + "\",\"" + first + "\"]}");
-        assertThat(response.statusCode()).isEqualTo(200); assertThat(response.body()).contains("\"durationSeconds\":80").contains("\"durationSeconds\":40");
+        assertThat(response.statusCode()).withFailMessage(response.body()).isEqualTo(200); assertThat(response.body()).contains("\"durationSeconds\":80").contains("\"durationSeconds\":40");
     }
 
     @Test void invalidDurationsAreRejected() throws Exception {
