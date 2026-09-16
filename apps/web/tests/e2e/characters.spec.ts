@@ -25,8 +25,9 @@ test("creates a character, reuses it, and preserves it after removing story memb
   await page.getByRole("button", { name: "Remove" }).click();
   await expect(page.getByText("No characters yet")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Add to Story" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add to Story", exact: true })).toBeVisible();
 });
+
 
 test("AI suggestion fills editable fields without creating a character until explicit creation", async ({ page }) => {
   await page.goto("/create");
