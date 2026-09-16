@@ -17,6 +17,7 @@ import com.storysprout.api.story.StoryRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class EditorService {
  private static final int WIDTH=1920,HEIGHT=1080,FPS=30; private static final double MIN_SCALE=.25,MAX_SCALE=3.0;
  private final StoryRepository stories; private final OutlineSceneRepository outlines; private final SceneSetupRepository setups; private final CharacterRepository characters; private final CompositionRepository compositions; private final ObjectMapper mapper;
- public EditorService(StoryRepository stories,OutlineSceneRepository outlines,SceneSetupRepository setups,CharacterRepository characters,CompositionRepository compositions,ObjectMapper mapper){this.stories=stories;this.outlines=outlines;this.setups=setups;this.characters=characters;this.compositions=compositions;this.mapper=mapper;}
+
+  @Autowired
+  public EditorService(StoryRepository stories,OutlineSceneRepository outlines,SceneSetupRepository setups,CharacterRepository characters,CompositionRepository compositions,ObjectMapper mapper){this.stories=stories;this.outlines=outlines;this.setups=setups;this.characters=characters;this.compositions=compositions;this.mapper=mapper!=null?mapper:new ObjectMapper();}
+  public EditorService(StoryRepository stories,OutlineSceneRepository outlines,SceneSetupRepository setups,CharacterRepository characters,CompositionRepository compositions){this(stories,outlines,setups,characters,compositions,new ObjectMapper());}
+
+
  @Transactional public EditorContext open(UUID storyId,UUID sceneId){Context c=context(storyId,sceneId);Composition existing=compositions.find(c.story.projectId(),sceneId).orElse(null);if(existing!=null)return contextResponse(c,existing,"EXISTING");Composition created=compositions.insert(UUID.randomUUID(),c.story.projectId(),sceneId,initialize(c));return contextResponse(c,created,"INITIALIZED");}
  @Transactional(readOnly=true) public Composition get(UUID storyId,UUID sceneId){Context c=context(storyId,sceneId);return compositions.find(c.story.projectId(),sceneId).orElseThrow(()->new EditorNotFoundException("Composition not found"));}
  @Transactional public Composition save(UUID storyId,UUID sceneId,long expectedVersion,JsonNode json){Context c=context(storyId,sceneId);validate(c,json);Composition current=compositions.find(c.story.projectId(),sceneId).orElseThrow(()->new EditorNotFoundException("Composition not found"));if(current.version()!=expectedVersion)throw new EditorConflictException("Composition version is stale; reload required");return compositions.update(current.id(),c.story.projectId(),sceneId,expectedVersion,json).orElseThrow(()->new EditorConflictException("Composition version is stale; reload required"));}
