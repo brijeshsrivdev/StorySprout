@@ -27,14 +27,20 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
   await page.reload();
 
-  const editorRequest = page.waitForRequest(request =>
-    request.url().includes("/api/v1/stories/") &&
-    request.url().includes("/editor") &&
-    request.method() === "GET"
+  const editorResponse = page.waitForResponse(
+    response =>
+      response.url().includes("/api/v1/stories/") &&
+      response.url().includes("/editor") &&
+      response.request().method() === "GET",
+    { timeout: 15000 }
   );
+
   await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page).toHaveURL(/\/stories\/.+\/editor\?scene=/);
-  await editorRequest;
+
+  const response = await editorResponse;
+  const responseBody = await response.text();
+  expect(response.ok(), `Editor context request failed: ${response.status()} ${responseBody}`).toBeTruthy();
 
   await expect(page.getByRole("heading", { name: "Properties" })).toBeVisible({ timeout: 15000 });
   await expect(page.getByText("CHARACTER", { exact: true })).toBeVisible({ timeout: 5000 });
