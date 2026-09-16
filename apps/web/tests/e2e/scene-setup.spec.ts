@@ -26,6 +26,7 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await page.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
   await page.reload();
+  await expect(page.getByRole("link", { name: "Open Editor →" })).toBeVisible();
 
   const editorResponse = page.waitForResponse(
     response =>
@@ -47,14 +48,14 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await expect(page.getByRole("main")).toContainText("1920 by 1080 logical stage");
 
   await page.getByRole("button", { name: /Milo/ }).first().click();
-  await page.getByLabel("X").fill("900");
-  await page.getByLabel("Scale").fill("1.5");
+  await page.getByLabel("X", { exact: true }).fill("900");
+  await page.getByLabel("Scale", { exact: true }).fill("1.5");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
   await page.reload();
   await page.getByRole("button", { name: /Milo/ }).first().click();
-  await expect(page.getByLabel("X")).toHaveValue("900");
-  await expect(page.getByLabel("Scale")).toHaveValue("1.5");
+  await expect(page.getByLabel("X", { exact: true })).toHaveValue("900");
+  await expect(page.getByLabel("Scale", { exact: true })).toHaveValue("1.5");
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 });
