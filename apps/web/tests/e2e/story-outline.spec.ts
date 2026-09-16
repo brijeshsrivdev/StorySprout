@@ -33,7 +33,7 @@ test("generates an outline and reorders scenes without changing durations", asyn
   await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
 
   await page.getByRole("button", { name: "Generate Outline" }).click();
-  await expect(page.getByDisplayValue("A Small Problem")).toBeVisible();
+  await expect(page.getByLabel("Scene 1 title")).toHaveValue("A Small Problem");
   const firstDuration = page.getByLabel("Scene 1 duration");
   const secondDuration = page.getByLabel("Scene 2 duration");
   const firstValue = await firstDuration.inputValue();
