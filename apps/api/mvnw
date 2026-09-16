@@ -2,9 +2,10 @@
 set -eu
 
 WRAPPER_VERSION=3.3.4
-WRAPPER_JAR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/.mvn/wrapper/maven-wrapper.jar"
+BASE_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+WRAPPER_JAR="$BASE_DIR/.mvn/wrapper/maven-wrapper.jar"
 if [ ! -f "$WRAPPER_JAR" ]; then
-  mkdir -p "$(dirname "$WRAPPER_JAR")"
+  mkdir -p "$BASE_DIR/.mvn/wrapper"
   curl -fsSL "https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/${WRAPPER_VERSION}/maven-wrapper-${WRAPPER_VERSION}.jar" -o "$WRAPPER_JAR"
 fi
-exec java -jar "$WRAPPER_JAR" "$@"
+exec java -cp "$WRAPPER_JAR" org.apache.maven.wrapper.MavenWrapperMain "$@"
