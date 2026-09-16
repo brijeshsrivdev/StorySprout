@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation and AI Provider Integration are validated. Story Outline implementation is complete on `feature/story-outline`; final CI/E2E validation is pending.
+**Snapshot:** Story Creation, AI Provider Integration, and Story Outline are validated. Story Outline is the current completed feature on `feature/story-outline`.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -71,7 +71,7 @@ gemini-2.0-flash-001
 The model remains configuration-driven so a future supported model can be selected without changing StoryGenerator or StoryService.
 
 ## Story Outline
-**Status:** IMPLEMENTED — final validation pending
+**Status:** VALIDATED
 
 Specification: `docs/specifications/story-outline.md`  
 Implementation memory: `docs/features/story-outline/implementation.md`
@@ -104,8 +104,13 @@ Implemented scope:
 - No AI credentials or generated media are persisted by Story Outline.
 
 ## Validation status
-- Story Creation and AI Provider Integration passed the merged GitHub Actions validation path.
-- Story Outline implementation has been committed to the feature branch; final frontend/backend/database/E2E/renderer validation is pending.
+- Story Creation: PASS in merged CI.
+- AI Provider Integration: PASS in merged CI.
+- Story Outline frontend lint/typecheck/unit/build: PASS.
+- Story Outline backend compile/tests/integration tests: PASS.
+- PostgreSQL/Flyway validation: PASS through backend integration and E2E startup against PostgreSQL 18.
+- Story Outline Playwright E2E: PASS, including creation, duration variance, refresh persistence, generation and reorder duration preservation.
+- Renderer regression/build: PASS.
 - Normal CI remains credential-free and does not call the real Gemini API.
 - A real Gemini API smoke test is not part of normal CI.
 
