@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation implementation is complete in the repository; final CI/E2E validation is being verified. AI Provider Integration is implemented with Spring AI 2.0.1 and Google GenAI behind the existing StoryGenerator boundary; final implementation validation is pending CI results.
+**Snapshot:** Story Creation and AI Provider Integration are implemented and validated through the merged CI path. Story Outline is now specified only; implementation has not started.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -14,7 +14,7 @@
 - GitHub Actions CI validates web, API, renderer, and Story Creation E2E.
 
 ## Story Creation
-**Status:** IMPLEMENTED (pending final validation result)
+**Status:** VALIDATED
 
 Specification: `docs/specifications/story-creation.md`
 Implementation memory: `docs/features/story-creation/implementation.md`
@@ -32,7 +32,7 @@ Implemented scope:
 - Frontend unit/component tests, backend service tests, PostgreSQL/Testcontainers API tests, and Playwright E2E coverage.
 
 ## AI Provider Integration
-**Status:** IMPLEMENTED — final CI validation pending
+**Status:** VALIDATED
 
 Specification: `docs/specifications/ai-provider-integration.md`
 Implementation memory: `docs/features/ai-provider-integration/implementation.md`
@@ -48,7 +48,6 @@ Implemented scope:
 - Dedicated prompt builder using idea, target age, duration, visual style and language.
 - Exact target-age validation remains `3_5`, `6_8`, `9_12`.
 - Typed structured output using Spring AI `ChatClient.entity(...).useProviderStructuredOutput()`.
-- Title/draft validation before converting to `StoryGenerationResult`.
 - Finite timeout with Java 21 virtual-thread execution and cancellation.
 - Bounded adapter retry budget with transient/permanent failure classification.
 - Spring AI retry layer configured to one attempt so adapter retries do not multiply with model-level retries.
@@ -71,22 +70,45 @@ gemini-2.0-flash-001
 
 The model remains configuration-driven so a future supported model can be selected without changing StoryGenerator or StoryService.
 
+## Story Outline
+**Status:** SPECIFIED — implementation not started
+
+Specification: `docs/specifications/story-outline.md`
+
+Defined scope:
+- Open a valid Story into an editable Story Outline.
+- Display Story title, relevant setup metadata and existing draft/idea for reference.
+- Generate a structured ordered outline through a provider-independent `StoryOutlineGenerator` capability boundary.
+- Persist outline scenes with title, summary and planned duration.
+- Edit, add, delete and reorder outline scenes.
+- Persist changes and preserve them across refresh.
+- Keep AI regeneration of an existing outline out of V1 so creator edits cannot be silently overwritten.
+- Keep Story Outline separate from Scene Setup, Editor/Composition and Renderer semantics.
+
+Planned scene timing rule:
+- Story duration remains 60, 180, or 300 seconds.
+- Outline scene duration is an editable planned integer duration in seconds.
+- A saved outline must contain at least one scene and its scene-duration total must equal the Story target duration.
+- These are planning estimates, not frame-accurate Composition timing.
+
+No Story Outline application code, database migration, Maven dependency, frontend dependency, or implementation document has been added by the specification task.
+
 ## Persistence
-- New Flyway migration: `apps/api/src/main/resources/db/migration/V2__story_creation.sql`.
-- Only `projects` and `stories` are created by the existing Story Creation migration.
-- Foundation `V1__foundation.sql` was not modified.
-- AI Provider Integration adds no database migration.
+- Existing Flyway migration: `apps/api/src/main/resources/db/migration/V2__story_creation.sql` creates only `projects` and `stories`.
+- AI Provider Integration added no database migration.
+- Story Outline proposes a future `story_outline_scenes` table in a new migration; implementation has not started.
+- Existing Story Creation migrations must not be rewritten.
 
 ## Validation status
-- Local execution is unavailable in this environment because the repository cannot be cloned through the container's network.
-- The AI implementation has been pushed through the GitHub repository path and GitHub Actions is the authoritative executable validation path.
-- Do not mark AI Provider Integration `VALIDATED` until the implementation CI run is confirmed successful.
-- Normal CI does not require or call the real Gemini API.
-- A real Gemini API call has not been performed as part of the normal implementation validation.
+- Story Creation and AI Provider Integration passed the merged GitHub Actions validation path.
+- Normal CI remains credential-free and does not call the real Gemini API.
+- A real Gemini API call has not been performed as part of normal CI validation.
+- Story Outline has specification-level test scenarios only; no implementation validation exists yet.
 
 ## Not implemented
-- Story Outline.
-- Scenes, characters, assets, editor/timeline, Composition editing.
+- Story Outline implementation.
+- Scene Setup.
+- Scenes as visual/Composition structures, characters, assets, editor/timeline, Composition editing.
 - Voice/music/media generation.
 - Preview/render/FFmpeg/render jobs.
 - Direct YouTube publishing.
@@ -95,4 +117,4 @@ The model remains configuration-driven so a future supported model can be select
 - Real Gemini API smoke test in CI.
 
 ## Architecture review
-AI Provider Integration is now implemented as infrastructure behind the provider-independent StoryGenerator boundary. Spring AI and Google GenAI types remain outside StoryService and domain contracts. The approved Gemini model is configuration-driven. No Story Creation API, persistence schema, Composition schema, frontend behavior, or renderer semantics were changed. Story Outline remains explicitly out of scope.
+Story Outline is specified as a planning/content layer between Story and future Scene Setup. It does not create or modify Composition JSON, TimelineClip, SceneObject, animation, camera, asset placement, renderer state, or render jobs. AI remains a suggestion mechanism behind a capability-specific provider-independent interface. Existing Spring AI/Gemini infrastructure is reused rather than duplicated.
