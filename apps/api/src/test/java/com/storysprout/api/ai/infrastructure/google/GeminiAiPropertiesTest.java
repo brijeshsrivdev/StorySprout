@@ -1,6 +1,7 @@
 package com.storysprout.api.ai.infrastructure.google;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,5 @@ class GeminiAiPropertiesTest {
 
         assertThatThrownBy(() -> properties.setMaxAttempts(3))
             .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    private static org.assertj.core.api.ThrowableAssert.ThrowingCallable assertThatThrownBy(Runnable runnable) {
-        return org.assertj.core.api.Assertions.assertThatThrownBy(runnable);
     }
 }
