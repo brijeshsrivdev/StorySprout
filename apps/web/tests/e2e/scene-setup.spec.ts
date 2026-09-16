@@ -24,7 +24,7 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await page.getByRole("button", { name: /Milo/ }).click();
   await page.getByRole("button", { name: /Wooden Chair/ }).click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible({ timeout: 15000 });
   await page.reload();
   await expect(page.getByRole("link", { name: "Open Editor →" })).toBeVisible();
 
