@@ -84,11 +84,6 @@ jobs:
             if curl -fsS --max-time 2 http://127.0.0.1:8080/api/v1/health; then
               exit 0
             fi
-            if ! pgrep -f 'StorySproutApiApplication' >/dev/null 2>&1; then
-              echo 'StorySprout API process exited before becoming healthy.'
-              cat /tmp/storysprout-api.log
-              exit 1
-            fi
             sleep 2
           done
           echo 'Timed out waiting for StorySprout API health endpoint.'
@@ -98,11 +93,6 @@ jobs:
           for i in {1..60}; do
             if curl -fsS --max-time 2 http://127.0.0.1:3000/; then
               exit 0
-            fi
-            if ! pgrep -f 'next-server' >/dev/null 2>&1; then
-              echo 'StorySprout web process exited before becoming healthy.'
-              cat /tmp/storysprout-web.log
-              exit 1
             fi
             sleep 2
           done
