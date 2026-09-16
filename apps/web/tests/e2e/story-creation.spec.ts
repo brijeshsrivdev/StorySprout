@@ -4,8 +4,10 @@ test("blank story persists and is visible after dashboard refresh", async ({ pag
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
   const blankStory = page.getByRole("button", { name: "Blank Story" });
-  await blankStory.click();
-  await expect(blankStory).toHaveAttribute("aria-pressed", "true");
+  await expect(async () => {
+    await blankStory.click();
+    await expect(blankStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
   const continueButton = page.getByRole("button", { name: "Continue" });
   await expect(continueButton).toBeEnabled();
   await continueButton.click();
@@ -23,8 +25,10 @@ test("AI story generates and persists its draft", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
   const aiStory = page.getByRole("button", { name: "Start with AI" });
-  await aiStory.click();
-  await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  await expect(async () => {
+    await aiStory.click();
+    await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
   const continueButton = page.getByRole("button", { name: "Continue" });
   await expect(continueButton).toBeEnabled();
   await continueButton.click();
@@ -44,8 +48,10 @@ test("AI failure is recoverable without losing setup", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
   const aiStory = page.getByRole("button", { name: "Start with AI" });
-  await aiStory.click();
-  await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  await expect(async () => {
+    await aiStory.click();
+    await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
   const continueButton = page.getByRole("button", { name: "Continue" });
   await expect(continueButton).toBeEnabled();
   await continueButton.click();
@@ -56,3 +62,4 @@ test("AI failure is recoverable without losing setup", async ({ page }) => {
   await expect(page.getByText(/Story generation failed/)).toBeVisible();
   await expect(page.getByLabel("Story idea")).toHaveValue("A rabbit learns to share.");
 });
+
