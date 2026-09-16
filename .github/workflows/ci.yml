@@ -68,6 +68,34 @@ jobs:
         working-directory: apps/api
       - run: npm run dev > /tmp/storysprout-web.log 2>&1 &
         working-directory: apps/web
-      - run: for i in {1..60}; do curl -fsS --max-time 2 http://127.0.0.1:8080/api/v1/health && exit 0; sleep 2; done; cat /tmp/storysprout-api.log; exit 1
-      - run: for i in {1..60}; do curl -fsS --max-time 2 http://127.0.0.1:3000/ && exit 0; sleep 2; done; cat /tmp/storysprout-web.log; exit 1
+      - run: |
+          for i in {1..60}; do
+            if curl -fsS --max-time 2 http://127.0.0.1:8080/api/v1/health; then
+              exit 0
+            fi
+            if ! kill -0 $(pgrep -f 'StorySproutApiApplication' | head -n1) 2>/dev/null; then
+              echo 'StorySprout API process exited before becoming healthy.'
+              cat /tmp/storysprout-api.log
+              exit 1
+            fi
+            sleep 2
+          done
+          echo 'Timed out waiting for StorySprout API health endpoint.'
+          cat /tmp/storysprout-api.log
+          exit 1
+      - run: |
+          for i in {1..60}; do
+            if curl -fsS --max-time 2 http://127.0.0.1:3000/; then
+              exit 0
+            fi
+            if ! kill -0 $(pgrep -f 'next-server' | head -n1) 2>/dev/null; then
+              echo 'StorySprout web process exited before becoming healthy.'
+              cat /tmp/storysprout-web.log
+              exit 1
+            fi
+            sleep 2
+          done
+          echo 'Timed out waiting for StorySprout web server.'
+          cat /tmp/storysprout-web.log
+          exit 1
       - run: npm --workspace apps/web run test:e2e
