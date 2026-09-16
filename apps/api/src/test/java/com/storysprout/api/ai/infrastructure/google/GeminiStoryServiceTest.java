@@ -42,7 +42,7 @@ class GeminiStoryServiceTest {
         Story completed = new Story(storyId, projectId, "Sharing Rabbit", "A rabbit learns to share.", "6_8", 3, "2D", "ENGLISH", StoryCreationMode.AI, StoryGenerationStatus.COMPLETED, "A rabbit learns to share.", null, null);
         when(stories.updateGeneration(any(UUID.class), eq(StoryGenerationStatus.COMPLETED), eq("Sharing Rabbit"), eq("A rabbit learns to share."))).thenReturn(completed);
         when(chatClient.prompt()).thenReturn(requestSpec);
-        when(requestSpec.user(any())).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(responseSpec);
         when(responseSpec.entity(eq(GeminiStoryResponse.class), any())).thenReturn(new GeminiStoryResponse("Sharing Rabbit", "A rabbit learns to share."));
         when(executor.execute(any(), any(Long.class), any())).thenAnswer(invocation -> {
