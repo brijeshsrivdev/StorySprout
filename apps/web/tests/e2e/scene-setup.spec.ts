@@ -1,0 +1,38 @@
+import { expect, test } from "@playwright/test";
+
+test("configures Scene Setup and reaches Editor placeholder", async ({ page }) => {
+  await page.goto("/create");
+  await page.getByRole("button", { name: "Blank Story" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Story idea").fill("Milo finds a butterfly in the garden.");
+  await page.getByLabel("Target age").selectOption("6_8");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
+  await page.getByRole("button", { name: "+ Add Scene" }).click();
+  await page.getByLabel("Scene 1 title").fill("Garden Discovery");
+  await page.getByLabel("Scene 1 summary").fill("Milo discovers a butterfly in the garden.");
+  await page.getByLabel("Scene 1 duration").fill("45");
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await page.getByRole("link", { name: /Continue to Characters/ }).click();
+  await page.getByLabel("Name").fill("Milo");
+  await page.getByLabel("Role description").fill("A curious little rabbit");
+  await page.getByLabel("Visual description").fill("Small brown rabbit with a blue scarf");
+  await page.getByRole("button", { name: "Create & Add to Story" }).click();
+  await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
+  await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible();
+  await page.getByRole("button", { name: /Sunny Forest/ }).click();
+  await page.getByRole("button", { name: /Milo/ }).click();
+  await page.getByRole("button", { name: /Wooden Chair/ }).click();
+  await page.getByRole("button", { name: "+ Add line" }).click();
+  await page.locator("textarea").last().fill("Look, a butterfly!");
+  await page.getByRole("button", { name: "+ Add action" }).click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByRole("status")).toContainText("Saved");
+  await page.reload();
+  await expect(page.getByText("Sunny Forest", { exact: true })).toBeVisible();
+  await expect(page.getByText("Wooden Chair", { exact: true })).toBeVisible();
+  await expect(page.locator("textarea").last()).toHaveValue("Look, a butterfly!");
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  await expect(page).toHaveURL(/\/stories\/.+\/editor\?scene=/);
+  await expect(page.getByRole("heading", { name: "Editor is next" })).toBeVisible();
+});
