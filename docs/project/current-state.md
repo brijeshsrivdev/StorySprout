@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, and Scene Setup are implemented. Scene Setup is awaiting final CI validation on `feature/scene-setup`.
+**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, and Scene Setup are validated in GitHub Actions. Scene Setup is the latest completed feature on `feature/scene-setup`.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -16,9 +16,10 @@
 - AI Provider Integration — VALIDATED.
 - Story Outline — VALIDATED.
 - Characters — VALIDATED.
+- Scene Setup — VALIDATED.
 
 ## Scene Setup
-**Status:** IMPLEMENTED — final CI validation pending
+**Status:** VALIDATED
 Specification: `docs/specifications/scene-setup.md`
 Implementation memory: `docs/features/scene-setup/implementation.md`
 
@@ -29,8 +30,8 @@ Implemented:
 - Controlled deterministic background preset catalog with select/replace/remove.
 - Existing Story Character selection with duplicate prevention.
 - Scene-local controlled prop instances; repeated presets supported.
-- Manual ordered Character/Narrator dialogue.
-- Fixed action intents: IDLE, TALK, WALK, RUN, WAVE, SIT, JUMP.
+- Manual ordered Character/Narrator dialogue with reorder controls.
+- Fixed action intents: IDLE, TALK, WALK, RUN, WAVE, SIT, JUMP, with reorder controls.
 - Explicit Save Changes for editable setup sections.
 - Previous/Next scene navigation.
 - Editor placeholder handoff only.
@@ -51,7 +52,7 @@ Implemented:
 - AI Provider Integration: PASS in merged CI.
 - Story Outline: PASS in merged CI.
 - Characters: PASS in merged CI.
-- Scene Setup: implementation and tests committed; final CI validation pending.
+- Scene Setup: PASS in GitHub Actions run `35101048667`.
 - Real Gemini smoke test: NOT RUN and not applicable to Scene Setup.
 
 ## Not implemented
