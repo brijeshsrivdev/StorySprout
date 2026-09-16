@@ -5,6 +5,12 @@ export type StoryOutline = { story: Story; scenes: OutlineScene[]; targetDuratio
 export type CharacterCategory = "CHILD" | "ADULT" | "ANIMAL" | "FANTASY" | "OBJECT" | "OTHER";
 export type Character = { id: string; projectId: string; name: string; roleDescription: string; category: CharacterCategory; visualDescription: string; personality: string | null; createdAt: string; updatedAt: string };
 export type CharacterSuggestion = Omit<Character, "id" | "projectId" | "createdAt" | "updatedAt">;
+export type SceneSetupCharacter = { characterId: string; orderIndex: number };
+export type SceneSetupProp = { id: string; propPresetKey: string; orderIndex: number };
+export type SceneSetupDialogue = { id: string; sequenceIndex: number; speakerType: "CHARACTER" | "NARRATOR"; characterId: string | null; text: string };
+export type SceneSetupAction = { id: string; characterId: string; sequenceIndex: number; action: "IDLE" | "TALK" | "WALK" | "RUN" | "WAVE" | "SIT" | "JUMP" };
+export type Preset = { key: string; name: string; category: string };
+export type SceneSetup = { id: string; storyId: string; outlineSceneId: string; storyTitle: string; sceneOrder: number; sceneTitle: string; sceneSummary: string; plannedDurationSeconds: number; backgroundPresetKey: string | null; characters: { id: string; name: string; category: string; orderIndex: number }[]; props: SceneSetupProp[]; dialogue: SceneSetupDialogue[]; actions: SceneSetupAction[]; backgroundOptions: Preset[]; propOptions: Preset[] };
 
 type ApiEnvelope<T> = { data: T };
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string, public fields: { field: string; message: string }[] = []) { super(message); } }
@@ -28,3 +34,13 @@ export const deleteCharacter=(projectId:string,characterId:string)=>request<void
 export const addCharacterToStory=(storyId:string,characterId:string)=>request<void>(`/stories/${storyId}/characters/${characterId}`,{method:"POST"});
 export const removeCharacterFromStory=(storyId:string,characterId:string)=>request<void>(`/stories/${storyId}/characters/${characterId}`,{method:"DELETE"});
 export const generateCharacter=(projectId:string,input:{idea:string;storyId?:string})=>request<CharacterSuggestion>(`/projects/${projectId}/characters/generate`,{method:"POST",body:JSON.stringify(input)});
+const setupPath=(storyId:string,sceneId:string)=>`/stories/${storyId}/outline-scenes/${sceneId}/scene-setup`;
+export const getSceneSetup=(storyId:string,sceneId:string)=>request<SceneSetup>(setupPath(storyId,sceneId));
+export const createSceneSetup=(storyId:string,sceneId:string)=>request<SceneSetup>(setupPath(storyId,sceneId),{method:"POST"});
+export const updateSceneBackground=(storyId:string,sceneId:string,backgroundPresetKey:string|null)=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/background`,{method:"PATCH",body:JSON.stringify({backgroundPresetKey})});
+export const saveSceneCharacters=(storyId:string,sceneId:string,characterIds:string[])=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/characters`,{method:"PUT",body:JSON.stringify({characterIds})});
+export const addSceneProp=(storyId:string,sceneId:string,propPresetKey:string)=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/props`,{method:"POST",body:JSON.stringify({propPresetKey})});
+export const removeSceneProp=(storyId:string,sceneId:string,propId:string)=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/props/${propId}`,{method:"DELETE"});
+export const saveSceneDialogue=(storyId:string,sceneId:string,lines:{speakerType:"CHARACTER"|"NARRATOR";characterId:string|null;text:string}[])=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/dialogue`,{method:"PUT",body:JSON.stringify({lines})});
+export const saveSceneActions=(storyId:string,sceneId:string,actions:{characterId:string;action:SceneSetupAction["action"]}[])=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/actions`,{method:"PUT",body:JSON.stringify({actions})});
+export const getSceneEditorHandoff=(storyId:string,sceneId:string)=>request<SceneSetup>(`${setupPath(storyId,sceneId)}/editor-handoff`);
