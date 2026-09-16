@@ -3,8 +3,15 @@ import { test, expect } from "@playwright/test";
 test("blank story persists and is visible after dashboard refresh", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
-  await page.getByRole("button", { name: "Blank Story" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  const blankStory = page.getByRole("button", { name: "Blank Story" });
+  await expect(async () => {
+    await blankStory.click();
+    await expect(blankStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
+  await expect(page.getByLabel("Story idea")).toBeVisible();
   await page.getByLabel("Story idea").fill("A tiny fox learns to share.");
   await page.getByLabel("Target age").selectOption("3_5");
   await page.getByRole("button", { name: "Continue" }).click();
@@ -17,8 +24,15 @@ test("blank story persists and is visible after dashboard refresh", async ({ pag
 test("AI story generates and persists its draft", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
-  await page.getByRole("button", { name: "Start with AI" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  const aiStory = page.getByRole("button", { name: "Start with AI" });
+  await expect(async () => {
+    await aiStory.click();
+    await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
+  await expect(page.getByLabel("Story idea")).toBeVisible();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("6_8");
   await page.getByRole("button", { name: "Generate Story" }).click();
@@ -33,11 +47,19 @@ test("AI failure is recoverable without losing setup", async ({ page }) => {
   });
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();
-  await page.getByRole("button", { name: "Start with AI" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  const aiStory = page.getByRole("button", { name: "Start with AI" });
+  await expect(async () => {
+    await aiStory.click();
+    await expect(aiStory).toHaveAttribute("aria-pressed", "true");
+  }).toPass();
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
+  await expect(page.getByLabel("Story idea")).toBeVisible();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("9_12");
   await page.getByRole("button", { name: "Generate Story" }).click();
   await expect(page.getByText(/Story generation failed/)).toBeVisible();
   await expect(page.getByLabel("Story idea")).toHaveValue("A rabbit learns to share.");
 });
+

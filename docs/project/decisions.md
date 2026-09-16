@@ -63,15 +63,19 @@ Do not introduce unnecessary microservices, Kubernetes, Redis/queues, production
 Meaningful features follow Specification → Acceptance Criteria → Test Cases → Failing Tests → Implementation → Passing Tests → Refactor → Validation → Feature Documentation → Current-State Update. Feature implementation docs preserve end-to-end knowledge and exact file responsibilities.
 
 ## ADR-013 — Spring AI is infrastructure behind provider-independent AI boundaries
-**Status:** Accepted for integration architecture; implementation pending
+**Status:** Accepted and implemented
 
-Spring AI may be introduced as the infrastructure/integration mechanism for external AI providers, but it must remain behind StorySprout's application-level AI contracts. Application/domain code must not depend on Spring AI, Google GenAI, Gemini-specific classes, provider credentials, or provider-specific response types.
+Spring AI is used as the infrastructure/integration mechanism for external AI providers, but it remains behind StorySprout's application-level AI contracts. Application/domain code does not depend on Spring AI, Google GenAI, Gemini-specific classes, provider credentials, or provider-specific response types.
 
-For the planned Gemini integration, `GeminiStoryGenerator` will implement the existing `StoryGenerator` contract. `ChatClient` is the normal adapter-level API; direct `GoogleGenAiChatModel` use requires a separate concrete justification. Provider/model selection and credentials remain externalized.
+The Gemini integration implements the existing `StoryGenerator` contract through `GeminiStoryGenerator`. `ChatClient` is the adapter-level API. `GoogleGenAiChatModel` is used only by Spring AI's own auto-configuration underneath ChatClient; StorySprout code does not directly depend on it.
 
-The requested `gemini-2.0-flash` target is currently blocked because Google's documented shutdown date was June 1, 2026. A currently supported Gemini model must be explicitly selected before implementation; no model substitution is silently authorized by this ADR.
+The approved initial Gemini model is `gemini-2.5-flash`. Model selection remains externalized through Spring AI configuration. The retired `gemini-2.0-flash` and `gemini-2.0-flash-001` models are not integrated.
 
-This decision does not add Spring AI dependencies, change StoryGenerator, change Story Creation, or create database/Composition changes.
+Authentication remains a configuration concern supporting Gemini Developer API and Vertex AI. Normal tests use the deterministic generator and require no credentials or network access.
+
+Reliability uses a deliberate two-layer boundary: Spring AI's model-level retry is limited to one attempt, while StorySprout's Gemini adapter owns a maximum two-attempt interactive generation budget. This prevents nested transport retries from multiplying the total AI request budget. Structured-output schema self-correction is not enabled in this slice for the same reason; provider-native structured output is used and the result is validated locally.
+
+This implementation does not change StoryGenerator, StoryService, Story Creation API contracts, database schema, Composition, renderer behavior, or product scope. Story Outline remains out of scope.
 
 ## Changing a decision
 Record the reason, affected components, migration/compatibility implications, and the new decision before or alongside implementation where practical.

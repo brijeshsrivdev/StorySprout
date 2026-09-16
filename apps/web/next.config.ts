@@ -1,3 +1,11 @@
 import type { NextConfig } from "next";
-const nextConfig: NextConfig = { async rewrites() { return [{ source: "/api/v1/:path*", destination: `${process.env.API_INTERNAL_URL ?? "http://localhost:8080"}/api/v1/:path*` }]; } };
+
+const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  async rewrites() {
+    return [{ source: "/api/v1/:path*", destination: `${process.env.API_INTERNAL_URL ?? "http://localhost:8080"}/api/v1/:path*` }];
+  },
+};
+
 export default nextConfig;
+

@@ -5,5 +5,25 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/storysprout}
     username: ${DB_USERNAME:storysprout}
     password: ${DB_PASSWORD:storysprout}
+  ai:
+    model:
+      chat: ${SPRING_AI_MODEL_CHAT:none}
+    google:
+      genai:
+        api-key: ${SPRING_AI_GOOGLE_GENAI_API_KEY:}
+        project-id: ${SPRING_AI_GOOGLE_GENAI_PROJECT_ID:}
+        location: ${SPRING_AI_GOOGLE_GENAI_LOCATION:}
+        credentials-uri: ${SPRING_AI_GOOGLE_GENAI_CREDENTIALS_URI:}
+        chat:
+          model: ${GEMINI_MODEL:gemini-2.5-flash}
+          response-mime-type: application/json
+    retry:
+      max-attempts: ${SPRING_AI_RETRY_MAX_ATTEMPTS:1}
+storysprout:
+  ai:
+    provider: ${STORYSPROUT_AI_PROVIDER:fake}
+    gemini:
+      timeout: ${STORYSPROUT_GEMINI_TIMEOUT:20s}
+      max-attempts: ${STORYSPROUT_GEMINI_MAX_ATTEMPTS:2}
 server:
   port: ${PORT:8080}
