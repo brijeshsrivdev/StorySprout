@@ -68,6 +68,6 @@ jobs:
         working-directory: apps/api
       - run: npm run dev > /tmp/storysprout-web.log 2>&1 &
         working-directory: apps/web
-      - run: for i in {1..30}; do curl -fsS http://127.0.0.1:8080/api/v1/health && break; sleep 2; done
-      - run: for i in {1..30}; do curl -fsS http://127.0.0.1:3000/ && break; sleep 2; done
+      - run: for i in {1..60}; do curl -fsS --max-time 2 http://127.0.0.1:8080/api/v1/health && exit 0; sleep 2; done; cat /tmp/storysprout-api.log; exit 1
+      - run: for i in {1..60}; do curl -fsS --max-time 2 http://127.0.0.1:3000/ && exit 0; sleep 2; done; cat /tmp/storysprout-web.log; exit 1
       - run: npm --workspace apps/web run test:e2e
