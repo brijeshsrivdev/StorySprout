@@ -20,6 +20,7 @@ jobs:
         working-directory: .
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run test
       - run: npm run build
 
   api:
@@ -35,8 +36,8 @@ jobs:
           java-version: 21
           cache: maven
       - run: chmod +x mvnw
-      - run: ./mvnw -q compile
-      - run: ./mvnw -q test
+      - run: ./mvnw -Dmaven.multiModuleProjectDirectory=$PWD -q compile
+      - run: ./mvnw -Dmaven.multiModuleProjectDirectory=$PWD -q test
 
   renderer:
     runs-on: ubuntu-latest
@@ -47,3 +48,26 @@ jobs:
           node-version: 24
       - run: npm install --workspaces --include-workspace-root
       - run: npm --workspace services/renderer run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [web, api]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm install --workspaces --include-workspace-root
+      - run: npx playwright install --with-deps chromium
+      - run: docker compose up -d postgres
+      - run: chmod +x mvnw && ./mvnw -Dmaven.multiModuleProjectDirectory=$PWD -q spring-boot:run > /tmp/storysprout-api.log 2>&1 &
+        working-directory: apps/api
+      - run: npm run dev > /tmp/storysprout-web.log 2>&1 &
+        working-directory: apps/web
+      - run: for i in {1..30}; do curl -fsS http://127.0.0.1:8080/api/v1/health && break; sleep 2; done
+      - run: for i in {1..30}; do curl -fsS http://127.0.0.1:3000/ && break; sleep 2; done
+      - run: npm --workspace apps/web run test:e2e

@@ -1,77 +1,55 @@
 # StorySprout Current State
 
-**Snapshot:** Repository foundation complete; Story Creation is the first specified product vertical slice and has not yet been implemented.
+**Snapshot:** Story Creation implementation is complete in the repository; final CI/E2E validation is being verified.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
-- Next.js web skeleton in `apps/web`.
-- Java 21 / Spring Boot API skeleton in `apps/api`.
-- `GET /api/v1/health` with an automated API health test.
-- TypeScript renderer skeleton with `/health` and `/ready`.
-- `packages/editor-model` defines Composition schema version `1.0`.
-- `packages/shared-types` contains initial Project, Asset, and RenderJob types.
-- `packages/validation` provides the runtime validation boundary.
+- Next.js web application in `apps/web`.
+- Java 21 / Spring Boot API in `apps/api`.
+- TypeScript renderer skeleton.
+- `packages/editor-model` Composition schema `1.0` remains unchanged.
+- `packages/shared-types` now includes Story Creation domain types.
+- `packages/validation` remains the runtime validation boundary.
 - Docker Compose provides local PostgreSQL and MinIO.
-- GitHub Actions CI is configured for web lint/typecheck/build, API compile/tests, and renderer build.
+- GitHub Actions CI validates web, API, renderer, and Story Creation E2E.
 
-## Canonical model
-The current Composition Model is in `packages/editor-model/src/index.ts`. It defines Composition, Scene, SceneBackground, SceneObject, TimelineClip, and `createEmptyComposition()`. The schema version is `1.0`.
-
-Story Creation does not modify the Composition Model. It creates/persists project and story setup only; scenes, timeline content, assets and rendered composition remain future slices.
-
-## Existing documentation
-The original foundation documents remain in place and are not replaced:
-- `docs/product/v1-scope.md`
-- `docs/product/v1-screen-spec.md`
-- `docs/architecture/overview.md`
-- `docs/architecture/editor-composition.md`
-- `docs/architecture/ai-boundary.md`
-- `docs/architecture/rendering.md`
-- `docs/architecture/local-development.md`
-- `docs/api/api-conventions.md`
-
-The SDD/TDD project-memory documents provide process and navigation around those existing references.
-
-## Specified next slice
-**Story Creation — SPECIFIED**
+## Story Creation
+**Status:** IMPLEMENTED (pending final validation result)
 
 Specification: `docs/specifications/story-creation.md`
+Implementation memory: `docs/features/story-creation/implementation.md`
 
-Scope:
-- Dashboard project list, empty state, create action and basic project cards.
-- Create Story with AI or Blank mode.
+Implemented scope:
+- Dashboard project list, empty state, loading/error states and Create Story.
+- AI/Blank mode selection.
 - Story Setup with idea, target age, duration, visual style and language.
-- Project creation and Story persistence APIs.
-- Validation and error handling.
-- Provider-independent `StoryGenerator` boundary with fake/mock test provider.
-- Concrete frontend, backend, persistence, API and end-to-end test scenarios.
+- Approved target-age values are exactly `3_5` (Ages 3–5), `6_8` (Ages 6–8), and `9_12` (Ages 9–12).
+- Project and Story persistence through the specified APIs.
+- Validation and reusable API error envelope.
+- Blank flow without AI invocation.
+- Provider-independent StoryGenerator with deterministic credential-free implementation.
+- AI generation status transitions and recoverable failure persistence.
+- Frontend unit/component tests, backend service tests, PostgreSQL/Testcontainers API tests, and Playwright E2E coverage.
 
-No implementation has started for this feature.
-
-## Foundation gaps to resolve during implementation
-- **Frontend test tooling:** `apps/web/package.json` currently has no test runner or component-testing dependencies. Because Story Creation requires frontend unit/component/E2E coverage, implementation will need the smallest justified testing setup before or alongside the first feature tests.
-- **API error envelope:** `docs/api/api-conventions.md` defines the API base path and response conventions but does not yet define a reusable domain-error response envelope. Story Creation should establish or document one consistent error envelope rather than creating an isolated feature-only format.
-- **Target-age options:** the Story Creation specification intentionally leaves the exact finite target-age labels/range open. This must be agreed before implementation.
-
-## Not implemented
-- Story Creation application code.
-- Authentication/authorization.
-- Production project/story CRUD.
-- Production editor or timeline UI.
-- Real AI provider integrations or media generation.
-- Asset upload/media pipeline.
-- Actual renderer/FFmpeg pipeline.
-- Render queue execution.
-- Direct YouTube publishing.
-- Production deployment.
-- Payments/collaboration/unnecessary infrastructure.
-
-## Foundation conflict/blocker review
-No architectural conflict was discovered for Story Creation. The slice fits the existing web/API/PostgreSQL structure and the established AI boundary.
-
-The Composition Model remains untouched by this slice, AI remains behind the internal boundary, and no renderer changes are required.
-
-The existing foundation database migration contains no domain tables; Story Creation therefore requires a new Flyway migration during implementation. The existing foundation migration must remain unchanged.
+## Persistence
+- New Flyway migration: `apps/api/src/main/resources/db/migration/V2__story_creation.sql`.
+- Only `projects` and `stories` are created.
+- Foundation `V1__foundation.sql` was not modified.
 
 ## Validation status
-This documentation change does not implement or validate Story Creation. Foundation checks remain the current executable validation. Always verify the latest GitHub Actions result before stating that the complete repository suite is green.
+- Local execution is unavailable in this environment because the repository cannot be cloned through the container's network.
+- GitHub Actions is the authoritative executable validation path and has been triggered for the implementation commit.
+- Do not mark Story Creation `VALIDATED` until the implementation CI/E2E run is confirmed successful.
+
+## Not implemented
+- Authentication/authorization.
+- Story Outline.
+- Scenes, characters, assets, editor/timeline, Composition editing.
+- Real AI provider integration.
+- Voice/music/media generation.
+- Preview/render/FFmpeg/render jobs.
+- Direct YouTube publishing.
+- Payments/collaboration/production deployment.
+
+## Architecture review
+No new architecture decision was required. Story Creation preserves the Composition source-of-truth boundary, provider-independent AI boundary, renderer separation, web desktop-first scope, and minimal infrastructure approach.

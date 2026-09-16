@@ -27,16 +27,6 @@ The implementation document must describe the feature end-to-end and include a *
 - Related decisions
 - File-by-file implementation map
 
-## File-by-file map requirements
-For every important file involved in a feature, document:
-- exact file path
-- responsibility
-- important behavior
-- dependencies/interactions
-- relationship to the feature
-
-Important test files should also be mapped to the behavior they prove.
-
 ## Status vocabulary
 - `PLANNED` — intended but not implemented.
 - `SPECIFIED` — specification and acceptance criteria exist.
@@ -49,6 +39,6 @@ Important test files should also be mapped to the behavior they prove.
 | Feature | Status | Specification | Implementation | Tests | Major dependencies |
 |---|---|---|---|---|---|
 | Repository Foundation | IMPLEMENTED | Pre-SDD foundation | Foundation implementation is represented by repository history and current-state documentation | API health test + CI checks | Next.js, Spring Boot, PostgreSQL, MinIO |
-| Story Creation | SPECIFIED | `docs/specifications/story-creation.md` | Not implemented | Test scenarios defined in specification; no feature tests yet | Next.js, Spring Boot, PostgreSQL, `packages/shared-types`, `packages/validation`, internal StoryGenerator boundary |
+| Story Creation | IMPLEMENTED | `docs/specifications/story-creation.md` | `docs/features/story-creation/implementation.md` | Frontend unit/component, backend unit/integration, API/persistence, Playwright E2E | Next.js, Spring Boot, PostgreSQL, Testcontainers, internal StoryGenerator boundary |
 
-Do not create implementation documentation for functionality that has not actually been implemented and validated.
+The Story Creation implementation document records the final validation state after CI completes.
