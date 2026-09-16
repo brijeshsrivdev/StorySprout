@@ -49,7 +49,14 @@ test("configures Scene Setup, initializes Editor, edits Character and persists C
   await page.getByRole("button", { name: /Milo/ }).first().click();
   await page.getByLabel("X", { exact: true }).fill("900");
   await page.getByLabel("Scale", { exact: true }).fill("1.5");
+
+  const savePromise = page.waitForResponse(
+    res => res.url().includes("/composition") && res.request().method() === "PUT",
+    { timeout: 15000 }
+  );
   await page.getByRole("button", { name: "Save" }).click();
+  const saveRes = await savePromise;
+  expect(saveRes.ok(), `Save composition failed: ${saveRes.status()} ${await saveRes.text()}`).toBeTruthy();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
 
   await page.reload();
