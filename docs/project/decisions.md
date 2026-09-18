@@ -10,7 +10,7 @@ AI output is editable input. The editor/project owns canonical state and seriali
 ## ADR-002 — Composition schema is versioned
 **Status:** Accepted
 
-The Composition Model has an explicit schema version. The current foundation starts at `1.0`; compatibility changes require deliberate versioning/migration decisions.
+The Composition Model has an explicit schema version. The foundation began at `1.0`; the Editor introduces deliberate schema `1.1` compatibility rather than silently changing `1.0`.
 
 ## ADR-003 — AI proposes suggestions/assets, not project state
 **Status:** Accepted
@@ -78,7 +78,7 @@ Reliability uses a deliberate two-layer boundary: Spring AI's model-level retry 
 This implementation does not change StoryGenerator, StoryService, Story Creation API contracts, database schema, Composition, renderer behavior, or product scope. Story Outline remains out of scope.
 
 ## ADR-014 — Composition SceneObject carries explicit semantic object type
-**Status:** Accepted — implementation deferred to SPEC-006
+**Status:** Accepted — implemented in SPEC-006
 
 The current Composition schema `1.0` has no explicit Character-vs-Prop identity on `SceneObject`. Although the shared asset model has `CHARACTER` and `PROP` asset types, V1 Character/Prop visuals are not guaranteed to resolve through persisted Asset records because deterministic placeholders are valid. Therefore `SceneObject.assetId` is not a reliable semantic discriminator.
 
@@ -90,7 +90,7 @@ Dialogue and action intent remain Scene Setup preparation data in V1 and are not
 
 The canonical Editor coordinate system remains a fixed logical `1920 × 1080` stage. Browser/CSS scaling changes presentation only; it does not rewrite Composition coordinates.
 
-Implementation must define the `1.0 → 1.1` compatibility/migration behavior before changing the executable Composition model. No application code, Composition code, migration, API, test, or renderer implementation is included in this specification clarification pass.
+Implementation uses an explicit `1.0 → 1.1` migration utility requiring caller-supplied semantic type for every legacy object. Legacy type is never inferred from asset IDs, names, URLs or conventions. New Editor persistence stores schema `1.1` only.
 
 ## Changing a decision
 Record the reason, affected components, migration/compatibility implications, and the new decision before or alongside implementation where practical.

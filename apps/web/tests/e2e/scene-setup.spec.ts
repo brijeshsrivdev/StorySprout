@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-test("configures Scene Setup and reaches Editor placeholder", async ({ page }) => {
+test("configures Scene Setup, initializes Editor, edits Character and persists Composition", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto("/create");
   await page.getByRole("button", { name: "Blank Story" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
@@ -23,16 +24,44 @@ test("configures Scene Setup and reaches Editor placeholder", async ({ page }) =
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).click();
   await page.getByRole("button", { name: /Wooden Chair/ }).click();
-  await page.getByRole("button", { name: "+ Add line" }).click();
-  await page.locator("textarea").last().fill("Look, a butterfly!");
-  await page.getByRole("button", { name: "+ Add action" }).click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByRole("status")).toContainText("Saved");
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible({ timeout: 15000 });
   await page.reload();
-  await expect(page.getByText("Sunny Forest", { exact: true })).toBeVisible();
-  await expect(page.getByText("Wooden Chair", { exact: true })).toBeVisible();
-  await expect(page.locator("textarea").last()).toHaveValue("Look, a butterfly!");
-  await page.getByRole("link", { name: "Open Editor →" }).click();
+  await expect(page.getByRole("link", { name: "Open Editor →" })).toBeVisible();
+
+  const [_, response] = await Promise.all([
+    page.getByRole("link", { name: "Open Editor →" }).click(),
+    page.waitForResponse(
+      res => res.url().includes("/api/v1/stories/") && res.url().includes("/editor") && res.request().method() === "GET",
+      { timeout: 15000 }
+    ),
+  ]);
+
   await expect(page).toHaveURL(/\/stories\/.+\/editor\?scene=/);
-  await expect(page.getByRole("heading", { name: "Editor is next" })).toBeVisible();
+
+  const responseBody = await response.text();
+  expect(response.ok(), `Editor context request failed: ${response.status()} ${responseBody}`).toBeTruthy();
+
+  await expect(page.getByRole("heading", { name: "Properties" })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("CHARACTER", { exact: true })).toBeVisible({ timeout: 5000 });
+  await expect(page.getByRole("main")).toContainText("1920 by 1080 logical stage");
+
+  await page.getByRole("button", { name: /Milo/ }).first().click();
+  await page.getByLabel("X", { exact: true }).fill("900");
+  await page.getByLabel("Scale", { exact: true }).fill("1.5");
+
+  const savePromise = page.waitForResponse(
+    res => res.url().includes("/composition") && res.request().method() === "PUT",
+    { timeout: 15000 }
+  );
+  await page.getByRole("button", { name: "Save" }).click();
+  const saveRes = await savePromise;
+  expect(saveRes.ok(), `Save composition failed: ${saveRes.status()} ${await saveRes.text()}`).toBeTruthy();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
+
+  await page.reload();
+  await page.getByRole("button", { name: /Milo/ }).first().click();
+  await expect(page.getByLabel("X", { exact: true })).toHaveValue("900");
+  await expect(page.getByLabel("Scale", { exact: true })).toHaveValue("1.5");
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
 });

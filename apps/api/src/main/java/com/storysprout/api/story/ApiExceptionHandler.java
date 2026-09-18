@@ -3,6 +3,9 @@ package com.storysprout.api.story;
 import com.storysprout.api.character.CharacterConflictException;
 import com.storysprout.api.character.CharacterGenerationException;
 import com.storysprout.api.character.CharacterNotFoundException;
+import com.storysprout.api.editor.EditorConflictException;
+import com.storysprout.api.editor.EditorNotFoundException;
+import com.storysprout.api.editor.EditorValidationException;
 import com.storysprout.api.outline.OutlineConflictException;
 import com.storysprout.api.outline.OutlineGenerationException;
 import com.storysprout.api.outline.OutlineNotFoundException;
@@ -16,7 +19,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
     @ExceptionHandler(StoryValidationException.class) ResponseEntity<ApiErrorResponse> validation(StoryValidationException ex){return ResponseEntity.badRequest().body(ApiErrorResponse.of("VALIDATION_ERROR",ex.getMessage(),List.of()));}
+    @ExceptionHandler(EditorValidationException.class) ResponseEntity<ApiErrorResponse> editorValidation(EditorValidationException ex){return ResponseEntity.unprocessableEntity().body(ApiErrorResponse.of("EDITOR_VALIDATION_FAILED",ex.getMessage(),List.of()));}
     @ExceptionHandler(MethodArgumentNotValidException.class) ResponseEntity<ApiErrorResponse> beanValidation(MethodArgumentNotValidException ex){return ResponseEntity.badRequest().body(ApiErrorResponse.of("VALIDATION_ERROR","Request validation failed",ex.getBindingResult().getFieldErrors().stream().map(e->new ApiFieldError(e.getField(),e.getDefaultMessage())).toList()));}
     @ExceptionHandler(ProjectNotFoundException.class) ResponseEntity<ApiErrorResponse> projectNotFound(ProjectNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("PROJECT_NOT_FOUND","Project not found",List.of()));}
     @ExceptionHandler(OutlineNotFoundException.class) ResponseEntity<ApiErrorResponse> outlineNotFound(OutlineNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("NOT_FOUND",ex.getMessage(),List.of()));}
@@ -27,5 +32,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(CharacterGenerationException.class) ResponseEntity<ApiErrorResponse> characterGeneration(CharacterGenerationException ex){return ResponseEntity.status(422).body(ApiErrorResponse.of("CHARACTER_GENERATION_FAILED",ex.getMessage(),List.of()));}
     @ExceptionHandler(SceneSetupNotFoundException.class) ResponseEntity<ApiErrorResponse> sceneSetupNotFound(SceneSetupNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("NOT_FOUND",ex.getMessage(),List.of()));}
     @ExceptionHandler(SceneSetupConflictException.class) ResponseEntity<ApiErrorResponse> sceneSetupConflict(SceneSetupConflictException ex){return ResponseEntity.status(409).body(ApiErrorResponse.of("SCENE_SETUP_CONFLICT",ex.getMessage(),List.of()));}
-    @ExceptionHandler(Exception.class) ResponseEntity<ApiErrorResponse> unexpected(Exception ex){return ResponseEntity.internalServerError().body(ApiErrorResponse.of("INTERNAL_ERROR","An unexpected error occurred.",List.of()));}
+    @ExceptionHandler(EditorNotFoundException.class) ResponseEntity<ApiErrorResponse> editorNotFound(EditorNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("EDITOR_NOT_FOUND",ex.getMessage(),List.of()));}
+    @ExceptionHandler(EditorConflictException.class) ResponseEntity<ApiErrorResponse> editorConflict(EditorConflictException ex){return ResponseEntity.status(409).body(ApiErrorResponse.of("EDITOR_CONFLICT",ex.getMessage(),List.of()));}
+    @ExceptionHandler(Exception.class) ResponseEntity<ApiErrorResponse> unexpected(Exception ex){log.error("Unhandled exception",ex);return ResponseEntity.internalServerError().body(ApiErrorResponse.of("INTERNAL_ERROR","An unexpected error occurred.",List.of()));}
 }
