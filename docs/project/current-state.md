@@ -1,6 +1,6 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, and Scene Setup are validated. SPEC-006 Editor implementation is now present on `feature/editor`; final CI validation is pending.
+**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, Scene Setup, and SPEC-006 Editor are validated on `main`. The next milestone is the StorySprout Product Experience & UI/UX Foundation; design/specification only, with no UI implementation started.
 
 ## Existing repository foundation
 - Monorepo containing web, API, renderer, and shared packages.
@@ -19,12 +19,14 @@
 - Scene Setup — VALIDATED.
 
 ## SPEC-006 Editor
-**Status:** IN_PROGRESS — implementation complete on feature branch; CI validation pending
+**Status:** VALIDATED — merged into `main` via PR #8
+Validation: GitHub Actions CI run `35349746183`
+
 Specification: `docs/specifications/editor.md`
 Final clarification: `docs/specifications/editor-clarifications.md`
 Implementation memory: `docs/features/editor/implementation.md`
 
-Implemented on the feature branch:
+Implemented on `main`:
 - One Outline Scene per Editor session using `storyId + outlineSceneId`.
 - Scene Setup → Composition one-time initialization and idempotent reopen behavior.
 - Existing Composition remains authoritative after initialization.
@@ -76,12 +78,31 @@ Implemented:
 - Story Outline: PASS in merged CI.
 - Characters: PASS in merged CI.
 - Scene Setup: PASS in GitHub Actions run `35101048667`.
-- Editor model tests: added; CI validation pending.
-- Editor backend tests: added; CI validation pending.
-- Editor E2E: implemented for Story → Outline → Characters → Scene Setup → Editor → move → scale → Save → reload; CI validation pending.
-- Full repository CI for Editor branch: PENDING.
+- Editor model tests: PASS in merged CI.
+- Editor backend tests: PASS in merged CI.
+- Editor E2E: PASS in merged CI for Story → Outline → Characters → Scene Setup → Editor → move → scale → Save → reload.
+- Full repository CI for Editor: PASS in run `35349746183`.
 - Local Maven/Node/Docker validation: NOT RUN because the execution environment cannot reach the repository/build services.
 - Real Gemini smoke test: NOT RUN; not part of Editor validation.
+
+## Product Experience & UI/UX Foundation
+**Status:** SPECIFIED — design only
+Documents:
+- `docs/product/storysprout-experience.md`
+- `docs/specifications/ui-ux.md`
+
+Defined:
+- StorySprout differentiation as an AI-assisted animation studio for persistent children's story worlds.
+- Warm cinematic visual language and reusable design tokens.
+- Creator-first, contextual-AI and source-of-truth UX principles.
+- Screen-by-screen direction for Dashboard, Create Story, Story Setup, Outline, Characters, Scene Setup and Editor.
+- Conceptual Preview and Render experiences without implementation.
+- Story World direction without premature V1 navigation.
+- AI suggestion/generation/accept/reject/error conventions.
+- WOW moments and V1/V1.1/Future prioritization.
+- Shared component/state, accessibility and responsive foundations.
+
+No application code, API, database, Composition Model, renderer or feature implementation was changed for this milestone.
 
 ## Not implemented
 - Timeline.
