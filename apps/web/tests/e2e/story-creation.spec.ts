@@ -62,3 +62,20 @@ test("AI failure is recoverable without losing setup", async ({ page }) => {
   await expect(page.getByText(/Story generation failed/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByLabel("Story idea")).toHaveValue("A rabbit learns to share.");
 });
+import { test, expect } from "@playwright/test";
+
+test("Create Story presents two deliberate creative paths", async ({ page }) => {
+  await page.goto("/create");
+  await expect(page.getByRole("heading", { name: "Choose how your story begins." })).toBeVisible();
+  const ai = page.getByRole("button", { name: /Start with AI/ });
+  const blank = page.getByRole("button", { name: /Start Blank/ });
+  await expect(ai).toHaveAttribute("aria-pressed", "false");
+  await expect(blank).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Continue →" })).toBeDisabled();
+  await ai.click();
+  await expect(ai).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Continue →" })).toBeEnabled();
+  await blank.click();
+  await expect(blank).toHaveAttribute("aria-pressed", "true");
+  await expect(ai).toHaveAttribute("aria-pressed", "false");
+});
