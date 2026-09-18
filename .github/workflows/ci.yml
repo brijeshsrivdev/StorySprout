@@ -100,3 +100,10 @@ jobs:
           cat /tmp/storysprout-web.log
           exit 1
       - run: npm --workspace apps/web run test:e2e
+      - name: Dump E2E server logs on failure
+        if: failure()
+        run: |
+          echo '--- API log ---'
+          cat /tmp/storysprout-api.log || true
+          echo '--- Web log ---'
+          cat /tmp/storysprout-web.log || true
