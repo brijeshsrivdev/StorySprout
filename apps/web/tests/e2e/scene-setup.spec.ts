@@ -77,3 +77,48 @@ test("supports keyboard navigation for background selection", async ({ page }) =
   await page.keyboard.press("Enter");
   await expect(garden).toHaveAttribute("aria-pressed", "true");
 });
+
+
+test("presents the Editor as the central creative workspace", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("button", { name: /Sunny Forest/ }).click();
+  await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+
+  await expect(page.getByLabel("Story stage")).toBeVisible();
+  await expect(page.getByText("Stage · 1920 × 1080")).toBeVisible();
+  await expect(page.getByText("Scene assets")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Properties" })).toBeVisible();
+  await expect(page.getByText("Coming next · no timing controls in Editor V1")).toBeVisible();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+});
+
+test("keeps Editor selection and inspector interactions keyboard accessible", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("button", { name: /Sunny Forest/ }).click();
+  await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+
+  const object = page.getByRole("button", { name: "Milo, CHARACTER" });
+  await object.focus();
+  await page.keyboard.press("Enter");
+  await expect(object).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("X")).toBeVisible();
+  await expect(page.getByLabel("Y")).toBeVisible();
+  await expect(page.getByLabel("Scale")).toBeVisible();
+
+  await page.getByLabel("X").fill("1000");
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Delete object" }).click();
+  await expect(page.getByText("Select something on the stage")).toBeVisible();
+});
+
+test("keeps the Timeline boundary non-functional and Scene Setup handoff reversible", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  await expect(page.getByText("Coming next · no timing controls in Editor V1")).toBeVisible();
+  await page.getByRole("link", { name: "Back to Scene Setup" }).click();
+  await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible();
+});

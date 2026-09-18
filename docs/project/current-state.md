@@ -22,8 +22,8 @@
 ## UI foundation progress
 - Shared StorySprout UI primitives and design tokens are implemented.
 - Dashboard, Create Story, Story Setup, Story Outline and Characters have focused UI foundation milestones on `feature/storysprout-ui-foundation`.
-- Scene Setup is the current UI foundation milestone: the existing preparation model is presented as a visual staging board.
-- Editor and future screens are not changed by this milestone.
+- Scene Setup is a completed UI foundation milestone: the existing preparation model is presented as a visual staging board.
+- Editor visual/UX polish is the latest completed UI foundation milestone; Preview, Render and future Timeline functionality are not changed.
 
 ## Scene Setup UI foundation
 The existing SPEC-005 domain remains authoritative:
@@ -48,10 +48,15 @@ The UI now provides:
 - loading/error/empty/recovery states;
 - keyboard/focus semantics and responsive layout.
 
+## Editor UI foundation
+- Existing Composition schema 1.1, fixed 1920 × 1080 stage semantics, object identity, transforms, visibility, deletion, layer ordering, explicit Save and optimistic conflict behavior remain unchanged.
+- The Editor now presents a dark, compact creative workstation with a creator toolkit, dominant stage, deterministic Character/Prop placeholders, contextual inspector groups, stronger empty states and an intentionally non-functional Timeline boundary.
+- No backend/API/database/renderer/Composition changes were made.
+
 ## Validation status
-- Scene Setup backend and prior E2E validation remain valid from CI run `35101048667`.
+- Scene Setup backend and prior E2E validation remain valid from CI run `35101048667`; functional Editor validation remains valid from CI run `35349746183`.
 - Scene Setup UI foundation local execution: NOT RUN because the current environment cannot reach repository/build services.
-- The UI milestone is not claimed as CI-validated until a new CI run reports green.
+- The Editor visual milestone is not claimed as CI-validated until a fresh CI run reports green.
 
 ## Architecture boundaries
 Characters remain reusable Project data; Scene Setup remains pre-editor preparation; Editor/Composition remains canonical editable visual state; renderer remains unchanged.
