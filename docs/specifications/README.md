@@ -35,3 +35,6 @@ Acceptance criteria should map to automated tests wherever practical. The implem
 
 ## Existing product specifications
 Do not duplicate the established product documents. Refer to `docs/product/v1-scope.md` and `docs/product/v1-screen-spec.md` for the existing V1 product scope and screen definition.
+
+## Product experience specifications
+- `docs/specifications/ui-ux.md` — StorySprout UI/UX Foundation (SPEC-UIUX-001), design-only specification for the creator experience and visual language.
