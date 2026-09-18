@@ -60,6 +60,62 @@ export interface LegacyComposition {
   scenes: Array<Omit<Scene, "objects"> & { objects: LegacySceneObject[] }>;
 }
 
+export interface RenderVisual {
+  id: string;
+  objectType: SceneObjectType;
+  assetId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  border: string;
+  label: string;
+}
+
+const BACKGROUND_COLORS: Record<string, string> = {
+  forest_day: "#DDF3D5",
+  garden_day: "#E6F4D7",
+  bedroom_day: "#F1E7D7",
+  classroom_day: "#E5ECF7",
+  village_day: "#F2E6D2",
+  beach_day: "#DDF2F7"
+};
+
+export function interpretScene(scene: Scene) {
+  if (scene.timeline.length > 0) throw new Error("Timeline is not supported by Preview/Render V1");
+  const backgroundKey = scene.background?.assetId?.startsWith("background-preset:")
+    ? scene.background.assetId.slice("background-preset:".length)
+    : "default";
+  const backgroundColor = BACKGROUND_COLORS[backgroundKey] ?? "#EEF1F5";
+
+  const objects = scene.objects
+    .filter(object => object.visible)
+    .map(object => {
+      const baseWidth = object.objectType === "CHARACTER" ? 180 : 160;
+      const baseHeight = object.objectType === "CHARACTER" ? 220 : 120;
+      const fill = object.objectType === "CHARACTER" ? "#E0E7FF" : "#FEF3C7";
+      const border = object.objectType === "CHARACTER" ? "#4F46E5" : "#B45309";
+      const label = object.objectType === "CHARACTER"
+        ? object.assetId.slice(0, 8)
+        : object.assetId.replace("prop-preset:", "");
+      return {
+        id: object.id,
+        objectType: object.objectType,
+        assetId: object.assetId,
+        x: object.x,
+        y: object.y,
+        width: baseWidth * object.scale,
+        height: baseHeight * object.scale,
+        fill,
+        border,
+        label
+      } satisfies RenderVisual;
+    });
+
+  return { backgroundColor, objects };
+}
+
 export function createEmptyComposition(projectId: string): Composition {
   return { schemaVersion: COMPOSITION_SCHEMA_VERSION, projectId, width: 1920, height: 1080, fps: 30, durationMs: 0, scenes: [] };
 }

@@ -59,7 +59,7 @@ The UI now provides:
 - The Editor visual milestone is not claimed as CI-validated until a fresh CI run reports green.
 
 ## Architecture boundaries
-Characters remain reusable Project data; Scene Setup remains pre-editor preparation; Editor/Composition remains canonical editable visual state; renderer remains unchanged.
+Characters remain reusable Project data; Scene Setup remains pre-editor preparation; Editor/Composition remains canonical editable visual state; renderer remains a separate rendering service consuming immutable Composition snapshots.
 
 ## Not implemented
 - Timeline.

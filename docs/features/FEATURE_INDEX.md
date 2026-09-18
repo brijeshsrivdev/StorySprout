@@ -39,4 +39,9 @@ The implementation document must describe the feature end-to-end and include a *
 | Editor | VALIDATED | `docs/specifications/editor.md` + `docs/specifications/editor-clarifications.md` | `docs/features/editor/implementation.md` — functional Editor plus visual/UX polish | Model regression, backend service tests, Scene Setup → Editor Playwright flow; Editor UI assertions added for the visual milestone; new UI execution unavailable | Scene Setup, Characters, Story Outline, Composition schema 1.1, PostgreSQL, Next.js |
 
 ## P1 remediation milestone
-The UI foundation received a focused P1 remediation after the cross-screen audit: shared form accessibility, valid Character membership actions, AI review boundaries, Story World continuity, and Editor/dashboard token coherence. See the feature implementation documents for the affected flows. Preview, Render, and Timeline remain out of scope.
+The UI foundation received a focused P1 remediation after the cross-screen audit: shared form accessibility, valid Character membership actions, AI review boundaries, Story World continuity, and Editor/dashboard token coherence. See the feature implementation documents for the affected flows. Timeline remains out of scope; Preview and Render are the next product milestone.
+
+
+## Preview + Render Foundation milestone
+| Preview | IMPLEMENTED | `docs/specifications/preview-render.md` | `docs/features/preview/implementation.md` | Repository tests not executed in current environment | Existing Composition 1.1, editor-model shared interpretation, Next.js |
+| Render | IMPLEMENTED | `docs/specifications/preview-render.md` | `docs/features/render/implementation.md` | Repository tests not executed in current environment | Spring Boot, PostgreSQL, MinIO/S3-compatible storage, FFmpeg, renderer service |

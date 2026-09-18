@@ -29,6 +29,18 @@ services:
     volumes:
       - minio-data:/data
 
+  renderer:
+    build:
+      context: .
+      dockerfile: services/renderer/Dockerfile
+    container_name: storysprout-renderer
+    environment:
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - minio
+
 volumes:
   postgres-data:
   minio-data:

@@ -126,3 +126,12 @@ test("keeps the Timeline boundary non-functional and Scene Setup handoff reversi
   await page.getByRole("link", { name: "Back to Scene Setup" }).click();
   await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible();
 });
+
+
+test("exposes Preview and Render without reopening the frozen Editor workflow", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  await expect(page.getByRole("link", { name: "Preview" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Render" })).toBeVisible();
+  await expect(page.getByText("Coming next · no timing controls in Editor V1")).toBeVisible();
+});

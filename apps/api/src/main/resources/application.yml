@@ -25,5 +25,12 @@ storysprout:
     gemini:
       timeout: ${STORYSPROUT_GEMINI_TIMEOUT:20s}
       max-attempts: ${STORYSPROUT_GEMINI_MAX_ATTEMPTS:2}
+  renderer:
+    base-url: ${STORYSPROUT_RENDERER_BASE_URL:http://localhost:4000}
+  storage:
+    endpoint: ${STORYSPROUT_STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${STORYSPROUT_STORAGE_ACCESS_KEY:storysprout}
+    secret-key: ${STORYSPROUT_STORAGE_SECRET_KEY:storysprout}
+    bucket: ${STORYSPROUT_STORAGE_BUCKET:storysprout-renders}
 server:
   port: ${PORT:8080}
