@@ -1,6 +1,5 @@
 package com.storysprout.api.editor;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.storysprout.api.character.Character;
 import com.storysprout.api.scene.SceneSetup;
 import com.storysprout.api.scene.SceneSetupCatalog;

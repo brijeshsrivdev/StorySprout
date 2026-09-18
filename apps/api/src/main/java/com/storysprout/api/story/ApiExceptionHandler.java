@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
     @ExceptionHandler(StoryValidationException.class) ResponseEntity<ApiErrorResponse> validation(StoryValidationException ex){return ResponseEntity.badRequest().body(ApiErrorResponse.of("VALIDATION_ERROR",ex.getMessage(),List.of()));}
     @ExceptionHandler(EditorValidationException.class) ResponseEntity<ApiErrorResponse> editorValidation(EditorValidationException ex){return ResponseEntity.unprocessableEntity().body(ApiErrorResponse.of("EDITOR_VALIDATION_FAILED",ex.getMessage(),List.of()));}
     @ExceptionHandler(MethodArgumentNotValidException.class) ResponseEntity<ApiErrorResponse> beanValidation(MethodArgumentNotValidException ex){return ResponseEntity.badRequest().body(ApiErrorResponse.of("VALIDATION_ERROR","Request validation failed",ex.getBindingResult().getFieldErrors().stream().map(e->new ApiFieldError(e.getField(),e.getDefaultMessage())).toList()));}
@@ -33,5 +34,5 @@ public class ApiExceptionHandler {
     @ExceptionHandler(SceneSetupConflictException.class) ResponseEntity<ApiErrorResponse> sceneSetupConflict(SceneSetupConflictException ex){return ResponseEntity.status(409).body(ApiErrorResponse.of("SCENE_SETUP_CONFLICT",ex.getMessage(),List.of()));}
     @ExceptionHandler(EditorNotFoundException.class) ResponseEntity<ApiErrorResponse> editorNotFound(EditorNotFoundException ex){return ResponseEntity.status(404).body(ApiErrorResponse.of("EDITOR_NOT_FOUND",ex.getMessage(),List.of()));}
     @ExceptionHandler(EditorConflictException.class) ResponseEntity<ApiErrorResponse> editorConflict(EditorConflictException ex){return ResponseEntity.status(409).body(ApiErrorResponse.of("EDITOR_CONFLICT",ex.getMessage(),List.of()));}
-    @ExceptionHandler(Exception.class) ResponseEntity<ApiErrorResponse> unexpected(Exception ex){return ResponseEntity.internalServerError().body(ApiErrorResponse.of("INTERNAL_ERROR","An unexpected error occurred.",List.of()));}
+    @ExceptionHandler(Exception.class) ResponseEntity<ApiErrorResponse> unexpected(Exception ex){log.error("Unhandled exception",ex);return ResponseEntity.internalServerError().body(ApiErrorResponse.of("INTERNAL_ERROR","An unexpected error occurred.",List.of()));}
 }
