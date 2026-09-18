@@ -70,3 +70,15 @@ Characters remain reusable Project data; Scene Setup remains pre-editor preparat
 - Direct YouTube publishing.
 - Authentication/authorization.
 - Payments/collaboration/production deployment.
+
+## P1 remediation milestone
+- Shared `Field` now programmatically associates its visible label with the rendered control and preserves explicit control IDs where supplied.
+- Story Character cards no longer expose Delete while the Character is a current Story member; Project Library deletion remains available under existing server-side reference protection.
+- Successful AI Story Creation pauses at an explicit `Your Story Draft` review state before continuing to Story Outline.
+- AI-generated Outline content is presented as an `AI-generated starting point` and becomes `Creator-shaped outline` after creator edits in the current session; persistence semantics are unchanged.
+- Scene Setup and Editor now reinforce `Project → Story → Scene` and the reusable Project Character → Story Character relationship.
+- Dashboard story cards no longer use the default gradient; Editor dark workspace surfaces use shared editor design tokens.
+- No backend, API, database, Composition, renderer, Preview, Render, or Timeline work was introduced.
+
+## P1 remediation validation
+Frontend tests/build/lint were not executed in this environment; repository/build service execution remains unavailable. No CI result is claimed for this commit.

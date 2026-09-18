@@ -10,6 +10,7 @@ test("blank story continues into outline and persists after dashboard refresh", 
   await expect(continueButton).toBeEnabled();
   await continueButton.click();
   await expect(page.getByLabel("Story idea")).toBeVisible();
+  await expect(page.locator("label").filter({ hasText: "Story idea" }).first()).toHaveAttribute("for", "idea");
   await page.getByLabel("Story idea").fill("A tiny fox learns to share.");
   await page.getByLabel("Target age").selectOption("3_5");
   await page.getByRole("button", { name: "Continue" }).click();
@@ -34,7 +35,11 @@ test("AI story generates and persists its draft", async ({ page }) => {
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("6_8");
   await page.getByRole("button", { name: "Generate Story" }).click();
-  await expect(page.getByText("Story draft generated")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("heading", { name: "Your Story Draft" })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("AI proposal", { exact: true })).toBeVisible();
+  await expect(page.getByText(/review and shape/i)).toBeVisible();
+  await page.getByRole("button", { name: "Continue to Story Outline →" }).click();
+  await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
   await page.goto("/");
   await expect(page.getByText("Untitled Story").first()).toBeVisible({ timeout: 15000 });
 });

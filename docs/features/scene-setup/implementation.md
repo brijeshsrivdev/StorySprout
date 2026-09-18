@@ -56,3 +56,7 @@ Local frontend execution was not available in the current environment. No test/b
 | `docs/features/scene-setup/implementation.md` | Feature implementation memory and UI milestone status. |
 | `docs/project/current-state.md` | Current UI foundation milestone state. |
 | `docs/features/FEATURE_INDEX.md` | Feature status/index entry. |
+
+## P1 remediation — Story World continuity
+
+Scene Setup now makes the existing hierarchy explicit as `Project → Story → Scene` and explains that staged characters are Story Characters originating from the reusable Project Character Library. No new domain entity, persistence, or API behavior was introduced.

@@ -52,6 +52,7 @@ export default function StoryOutlinePage() {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [creatorShaped, setCreatorShaped] = useState(false);
 
   async function loadOutline() {
     setLoading(true);
@@ -137,6 +138,7 @@ export default function StoryOutlinePage() {
       current.map((scene) => (scene.id === id ? { ...scene, ...patch } : scene)),
     );
     setDirty(true);
+    setCreatorShaped(true);
     setSaveError(null);
   }
 
@@ -156,6 +158,7 @@ export default function StoryOutlinePage() {
       },
     ]);
     setDirty(true);
+    setCreatorShaped(true);
     setSaveError(null);
   }
 
@@ -169,6 +172,7 @@ export default function StoryOutlinePage() {
     );
     if (!id.startsWith("new-")) setDeleted((current) => [...current, id]);
     setDirty(true);
+    setCreatorShaped(true);
     setSaveError(null);
   }
 
@@ -180,6 +184,7 @@ export default function StoryOutlinePage() {
     [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
     setScenes(next.map((scene, position) => ({ ...scene, orderIndex: position + 1 })));
     setDirty(true);
+    setCreatorShaped(true);
     setSaveError(null);
   }
 
@@ -257,6 +262,7 @@ export default function StoryOutlinePage() {
       setOutline(result);
       setScenes(result.scenes);
       setDirty(false);
+      setCreatorShaped(false);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Outline generation failed.");
     } finally {
@@ -339,6 +345,17 @@ export default function StoryOutlinePage() {
                     Try again
                   </Button>
                 )}
+              </div>
+            </Notice>
+          </div>
+        )}
+
+        {outline.story.creationMode === "AI" && scenes.length > 0 && (
+          <div className="mt-6">
+            <Notice tone={creatorShaped ? "info" : "ai"}>
+              <div>
+                <p className="font-semibold">{creatorShaped ? "Creator-shaped outline" : "AI-generated starting point"}</p>
+                <p className="mt-1 text-sm">{creatorShaped ? "Your edits are now the working story plan. Keep shaping the scenes before continuing." : "These scenes were proposed by AI. Review and shape them before treating the outline as your final story plan."}</p>
               </div>
             </Notice>
           </div>

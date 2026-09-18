@@ -217,3 +217,7 @@ Backend unit/integration coverage remains unchanged because this milestone chang
 | `apps/api/src/main/java/com/storysprout/api/character/CharacterController.java` | REST API | Existing Character endpoints remain unchanged. |
 | `apps/api/src/main/resources/db/migration/V4__characters.sql` | Character persistence | Existing Project/Story ownership model remains unchanged. |
 | `docs/specifications/characters.md` | Specification | SPEC-004 source of truth. |
+
+## P1 remediation — shared accessibility and membership actions
+
+The P1 UI remediation keeps `Field` responsible for label/control association and removes the unusable library-delete action from Story Character cards. Story membership continues to use `Remove from Story`; Project Character Library retains deletion only where the existing domain rules allow it. Backend deletion protection and Character contracts are unchanged.

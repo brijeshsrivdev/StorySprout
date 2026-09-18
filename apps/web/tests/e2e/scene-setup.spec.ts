@@ -19,6 +19,9 @@ async function openSceneSetup(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible();
+  await expect(page.getByText("Project", { exact: true })).toBeVisible();
+  await expect(page.getByText("Story", { exact: true })).toBeVisible();
+  await expect(page.getByText("Scene", { exact: true })).toBeVisible();
 }
 
 test("stages scene ingredients with accessible selection and preserves existing constraints", async ({ page }) => {
@@ -88,7 +91,8 @@ test("presents the Editor as the central creative workspace", async ({ page }) =
 
   await expect(page.getByLabel("Story stage")).toBeVisible();
   await expect(page.getByText("Stage · 1920 × 1080")).toBeVisible();
-  await expect(page.getByText("Scene assets")).toBeVisible();
+  await expect(page.getByText("Story Characters")).toBeVisible();
+  await expect(page.getByText("Reusable Project characters staged in this Story.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Properties" })).toBeVisible();
   await expect(page.getByText("Coming next · no timing controls in Editor V1")).toBeVisible();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();

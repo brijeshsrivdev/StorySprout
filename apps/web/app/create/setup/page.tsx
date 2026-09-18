@@ -63,6 +63,7 @@ function StorySetupForm() {
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
+  const [reviewContinuationPath, setReviewContinuationPath] = useState<string | null>(null);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -95,12 +96,13 @@ function StorySetupForm() {
         language: language as "ENGLISH" | "HINDI",
       });
 
-      setGeneratedDraft(story.draftContent);
-      if (mode === "BLANK" || story.generationStatus === "COMPLETED") {
-        setTimeout(() => router.replace(story.continuationPath), 300);
-      } else {
-        setSaving(false);
+      if (mode === "BLANK") {
+        router.replace(story.continuationPath);
+        return;
       }
+      setGeneratedDraft(story.draftContent);
+      setReviewContinuationPath(story.continuationPath);
+      setSaving(false);
     } catch (e) {
       const apiError = e instanceof ApiError ? e : null;
       setError(
@@ -264,14 +266,19 @@ function StorySetupForm() {
             )}
 
             {generatedDraft && mode === "AI" && (
-              <Notice tone="success">
-                <div>
-                  <p className="font-semibold">Your first draft is ready.</p>
-                  <p className="mt-1 text-sm">
-                    StorySprout created this draft for you to review next.
-                  </p>
+              <section aria-labelledby="story-draft-heading" className="rounded-[20px] border border-violet-200 bg-white p-6 shadow-[var(--ss-shadow-raised)] sm:p-8">
+                <div className="flex flex-wrap items-center gap-2">
+                  <AiBadge />
+                  <p className="text-xs font-semibold uppercase tracking-[.14em] text-[var(--ss-ai)]">AI proposal</p>
                 </div>
-              </Notice>
+                <h2 id="story-draft-heading" className="mt-3 text-2xl font-bold tracking-tight">Your Story Draft</h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--ss-muted)]">StorySprout proposed this first draft from your idea and setup. Review it before moving into the Story Outline.</p>
+                <div className="mt-6 whitespace-pre-wrap rounded-[14px] border border-violet-100 bg-violet-50/40 p-5 text-sm leading-7 text-slate-800" aria-live="polite">{generatedDraft}</div>
+                <div className="mt-6 flex flex-col gap-3 border-t border-[var(--ss-border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-[var(--ss-muted)]">The AI draft is now your starting point. You can shape the story further in the next step.</p>
+                  <Button type="button" onClick={() => reviewContinuationPath && router.replace(reviewContinuationPath)} disabled={!reviewContinuationPath}>Continue to Story Outline →</Button>
+                </div>
+              </section>
             )}
 
             <div className="flex flex-col items-stretch gap-3 border-t border-[var(--ss-border)] pt-7 sm:flex-row sm:items-center sm:justify-between">

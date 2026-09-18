@@ -156,3 +156,7 @@ ADR-001, ADR-002, ADR-005, ADR-006, ADR-007, ADR-009, ADR-011, ADR-012 and ADR-0
 | `docs/api/api-conventions.md` | API contract | Shared response/error envelope. |
 | `docs/features/FEATURE_INDEX.md` | Feature index | Editor implementation status. |
 | `docs/project/current-state.md` | Project memory | Editor implementation/validation state. |
+
+## P1 remediation — Story World continuity and workspace tokens
+
+The Editor now preserves the `Project → Story → Scene` relationship in its workspace header and labels the toolkit as `Story Characters`, with existing character names/category context retained. Its dark workspace palette is now represented by shared StorySprout editor tokens in `globals.css` rather than an unrelated set of hard-coded surface colors. Composition, API, and renderer behavior are unchanged.

@@ -38,11 +38,13 @@ test("generates an outline and reorders scenes without changing durations", asyn
   await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
   await page.getByRole("button", { name: "Generate Outline" }).click();
   await expect(page.getByLabel("Scene 1 title")).toHaveValue("A Small Problem");
+  await expect(page.getByText("AI-generated starting point", { exact: true })).toBeVisible();
   const firstDuration = page.getByLabel("Scene 1 duration");
   const secondDuration = page.getByLabel("Scene 2 duration");
   const firstValue = await firstDuration.inputValue();
   const secondValue = await secondDuration.inputValue();
   await page.getByRole("button", { name: "Move scene 2 up" }).click();
+  await expect(page.getByText("Creator-shaped outline", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByLabel("Scene 1 duration")).toHaveValue(secondValue);
   await expect(page.getByLabel("Scene 2 duration")).toHaveValue(firstValue);

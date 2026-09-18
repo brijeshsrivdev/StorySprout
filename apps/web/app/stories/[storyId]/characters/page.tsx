@@ -139,7 +139,7 @@ function CharacterCard({
         {onAdd && <Button variant="primary" onClick={onAdd}>Add to Story</Button>}
         <Button variant="secondary" onClick={onEdit}>Edit</Button>
         {onRemove && <Button variant="secondary" onClick={onRemove}>Remove from Story</Button>}
-        <Button variant="danger" onClick={onDelete}>Delete</Button>
+        {onDelete && <Button variant="danger" onClick={onDelete}>Delete</Button>}
       </div>
     </Card>
   );

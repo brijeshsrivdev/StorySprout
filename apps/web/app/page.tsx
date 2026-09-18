@@ -21,7 +21,7 @@ export default function Dashboard() {
     <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8 lg:py-8">
       <header className="mb-10 flex items-center justify-between gap-4">
         <BrandMark/>
-        <Link href="/create"><Button as any> </Button></Link>
+        <Link href="/create" aria-label="Create Story"><Button aria-label="Create Story">+</Button></Link>
       </header>
       <section className="mb-10 flex flex-col gap-5 rounded-[22px] border border-slate-200 bg-white px-7 py-8 shadow-[var(--ss-shadow-raised)] sm:px-10 sm:py-10 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -40,7 +40,7 @@ export default function Dashboard() {
           <div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.14em] text-slate-500">Project</p><h2 className="mt-1 text-xl font-bold">{project.name}</h2></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{project.status}</span></div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {(stories[project.id]??[]).map((story,idx)=><Link key={story.id} href={story.continuationPath} className="group rounded-[16px] border border-slate-200 bg-white p-5 shadow-[var(--ss-shadow-raised)] transition duration-150 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-              <div className="flex aspect-[16/9] items-end rounded-[12px] border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-indigo-50 p-4">
+              <div className="flex aspect-[16/9] items-end rounded-[12px] border border-slate-200 bg-[var(--ss-surface-elevated)] p-4">
                 <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-indigo-600">Story {idx+1}</p><h3 className="mt-1 text-lg font-bold">{story.title}</h3></div>
               </div>
               <div className="mt-4 flex items-center justify-between gap-3"><p className="text-sm text-slate-600">{story.durationMinutes} min · {story.visualStyle} · {story.targetAge.replace("_","–")}</p><span className="text-sm font-semibold text-indigo-600 transition group-hover:translate-x-0.5">Continue →</span></div>

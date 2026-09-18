@@ -17,6 +17,7 @@ test("builds a reusable character library and preserves membership semantics", a
   await expect(page.getByText("Every story needs a cast.")).toBeVisible();
 
   await page.getByLabel("Name").fill("Milo");
+  await expect(page.locator("label").filter({ hasText: "Name" }).first()).toHaveAttribute("for", "character-form");
   await page.getByLabel("Role / description").fill("A curious rabbit who helps friends.");
   await page.getByLabel("Category").selectOption("ANIMAL");
   await page.getByLabel("Visual description").fill("Brown rabbit with a blue scarf.");
@@ -27,6 +28,8 @@ test("builds a reusable character library and preserves membership semantics", a
   await expect(page.getByText("Animal", { exact: true })).toBeVisible();
   await expect(page.getByText("Curious, kind, and brave.")).toBeVisible();
   await expect(page.getByText("In this Story", { exact: true })).toBeVisible();
+  const storyCard = page.locator("article").filter({ has: page.getByRole("heading", { name: "Milo" }) }).first();
+  await expect(storyCard.getByRole("button", { name: "Delete" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Edit" }).click();
   await expect(page.getByRole("heading", { name: "Edit Character" })).toBeVisible();

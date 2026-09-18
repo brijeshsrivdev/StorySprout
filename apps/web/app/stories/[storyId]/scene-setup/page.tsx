@@ -272,6 +272,9 @@ export default function SceneSetupPage() {
       />
 
       <main aria-labelledby="scene-setup-heading" className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-[var(--ss-muted)]">
+          <span className="text-slate-400">Project</span><span aria-hidden="true">→</span><Link href={`/stories/${storyId}/outline`} className="hover:text-[var(--ss-text)]">Story</Link><span aria-hidden="true">→</span><span className="text-[var(--ss-text)]">Scene</span>
+        </div>
         <div className="mb-6 flex flex-wrap items-center gap-2 text-xs font-semibold text-[var(--ss-muted)]">
           <Link href={`/stories/${storyId}/outline`} className="hover:text-[var(--ss-text)]">Outline</Link>
           <span aria-hidden="true">→</span>
@@ -333,7 +336,7 @@ export default function SceneSetupPage() {
               </Card>
 
               <Card className="p-5 sm:p-6">
-                <SectionHeader eyebrow="Cast" title="Characters in this scene" hint="Only Story Characters are available. Each Character can appear once in this scene." />
+                <SectionHeader eyebrow="Cast" title="Characters in this scene" hint="Only Story Characters are available. They come from the reusable Project Character Library; each Character can appear once in this scene." />
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {chars.map(character => {
                     const active = selected.includes(character.id);

@@ -17,6 +17,13 @@
   --ss-warning:#b45309;
   --ss-error:#b91c1c;
   --ss-ai:#7c3aed;
+  --ss-editor-bg:#1f2430;
+  --ss-editor-header:#171b24;
+  --ss-editor-panel:#202631;
+  --ss-editor-stage-shell:#272d38;
+  --ss-editor-stage:#1c212b;
+  --ss-editor-border:rgb(255 255 255 / .08);
+  --ss-editor-border-strong:rgb(255 255 255 / .12);
   --ss-shadow-raised:0 1px 2px rgb(15 23 42 / .04),0 8px 24px rgb(15 23 42 / .05);
   --ss-shadow-floating:0 16px 36px rgb(15 23 42 / .12);
 }
