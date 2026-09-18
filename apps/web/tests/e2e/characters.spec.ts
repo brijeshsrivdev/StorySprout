@@ -4,10 +4,8 @@ test("creates a character, reuses it, and preserves it after removing story memb
   page.on("dialog", dialog => dialog.accept());
   await page.goto("/create");
   const blankStory = page.getByRole("button", { name: "Blank Story" });
-  await expect(async () => {
-    await blankStory.click();
-    await expect(blankStory).toHaveAttribute("aria-pressed", "true");
-  }).toPass();
+  await blankStory.click();
+  await expect(blankStory).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
   await page.getByLabel("Target age").selectOption("6_8");
@@ -28,14 +26,11 @@ test("creates a character, reuses it, and preserves it after removing story memb
   await expect(page.getByRole("button", { name: "Add to Story", exact: true })).toBeVisible();
 });
 
-
 test("AI suggestion fills editable fields without creating a character until explicit creation", async ({ page }) => {
   await page.goto("/create");
   const blankStory = page.getByRole("button", { name: "Blank Story" });
-  await expect(async () => {
-    await blankStory.click();
-    await expect(blankStory).toHaveAttribute("aria-pressed", "true");
-  }).toPass();
+  await blankStory.click();
+  await expect(blankStory).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Story idea").fill("A kind fox learns courage.");
   await page.getByLabel("Target age").selectOption("6_8");
@@ -48,4 +43,3 @@ test("AI suggestion fills editable fields without creating a character until exp
   await expect(page.getByLabel("Name")).toHaveValue("Milo");
   await expect(page.getByText("No characters yet")).toBeVisible();
 });
-
