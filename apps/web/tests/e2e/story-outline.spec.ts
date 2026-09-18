@@ -7,9 +7,11 @@ test("creates an outline, shows planned duration and preserves it after refresh"
   await expect(blankStory).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Story idea").fill("A rabbit learns to share.");
-  await page.getByLabel("Target age").selectOption("6_8");
+  await page.getByRole("button", { name: "Ages 6–8" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
+  await expect(page.getByRole("heading", { name: "Storyboard" })).toBeVisible();
+  await expect(page.getByText("Target", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "+ Add Scene" })).toBeVisible();
   await page.getByRole("button", { name: "+ Add Scene" }).click();
   await page.getByLabel("Scene 1 title").fill("A sharing lesson");
@@ -31,7 +33,7 @@ test("generates an outline and reorders scenes without changing durations", asyn
   await expect(blankStory).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Story idea").fill("A small friend learns kindness.");
-  await page.getByLabel("Target age").selectOption("6_8");
+  await page.getByRole("button", { name: "Ages 6–8" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
   await page.getByRole("button", { name: "Generate Outline" }).click();
@@ -44,4 +46,36 @@ test("generates an outline and reorders scenes without changing durations", asyn
   await page.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByLabel("Scene 1 duration")).toHaveValue(secondValue);
   await expect(page.getByLabel("Scene 2 duration")).toHaveValue(firstValue);
+});
+
+test("prevents continuing with unsaved outline edits", async ({ page }) => {
+  await page.goto("/create");
+  const blankStory = page.getByRole("button", { name: "Blank Story" });
+  await blankStory.click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Story idea").fill("A small friend learns kindness.");
+  await page.getByRole("button", { name: "Ages 6–8" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
+  await page.getByRole("button", { name: "Generate Outline" }).click();
+  await page.getByLabel("Scene 1 title").fill("Creator edit");
+  const continueLink = page.getByRole("link", { name: "Continue to Characters →" });
+  await expect(continueLink).toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+});
+
+test("supports keyboard scene reordering", async ({ page }) => {
+  await page.goto("/create");
+  const blankStory = page.getByRole("button", { name: "Blank Story" });
+  await blankStory.click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Story idea").fill("A small friend learns kindness.");
+  await page.getByRole("button", { name: "Ages 6–8" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
+  await page.getByRole("button", { name: "Generate Outline" }).click();
+  const moveUp = page.getByRole("button", { name: "Move scene 2 up" });
+  await moveUp.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("Scene 1 title")).toHaveValue("A Helpful Friend");
 });
