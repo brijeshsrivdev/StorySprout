@@ -34,6 +34,38 @@ class RenderJobControllerTest {
     }
 
     @Test
+    void retryRequiresFailedJobAndUsesConflictForNonFailedJobs() throws Exception {
+        RenderJobService service = mock(RenderJobService.class);
+        UUID storyId = UUID.randomUUID();
+        UUID sceneId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+        when(service.retry(storyId, sceneId, jobId))
+                .thenThrow(new RenderJobConflictException("Only failed RenderJobs can be retried"));
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new RenderJobController(service)).build();
+
+        mvc.perform(post("/api/v1/stories/{storyId}/outline-scenes/{sceneId}/render-jobs/{jobId}/retry", storyId, sceneId, jobId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("CONFLICT"));
+    }
+
+    @Test
+    void artifactBeforeCompletionIsMappedToConflict() throws Exception {
+        RenderJobService service = mock(RenderJobService.class);
+        UUID storyId = UUID.randomUUID();
+        UUID sceneId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+        when(service.artifact(storyId, sceneId, jobId))
+                .thenThrow(new RenderJobConflictException("Render artifact is not available yet"));
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new RenderJobController(service)).build();
+
+        mvc.perform(get("/api/v1/stories/{storyId}/outline-scenes/{sceneId}/render-jobs/{jobId}/artifact", storyId, sceneId, jobId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("CONFLICT"));
+    }
+
+    @Test
     void missingJobIsMappedToNotFound() throws Exception {
         RenderJobService service = mock(RenderJobService.class);
         UUID storyId = UUID.randomUUID();
