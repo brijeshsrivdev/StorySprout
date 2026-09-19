@@ -1,9 +1,7 @@
 package com.storysprout.api.render;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.reset;
 
-import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -17,6 +15,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,6 +48,7 @@ class RenderPipelineIntegrationTest {
     @LocalServerPort int port;
     @Autowired JdbcTemplate jdbc;
     final HttpClient http = HttpClient.newHttpClient();
+    final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll
     static void startRenderer() throws IOException {
@@ -95,14 +96,12 @@ class RenderPipelineIntegrationTest {
                 "{\"title\":\"Garden\",\"summary\":\"A rabbit visits a garden.\",\"durationSeconds\":1}"));
 
         post("/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId + "/scene-setup", "");
-        post("/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId + "/editor", "");
 
         var editor = get("/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId + "/editor");
         assertThat(editor.statusCode()).isEqualTo(200);
-        String editorBody = editor.body();
-        Matcher compositionMatcher = Pattern.compile("\"composition\":\\s*\\{.*?\"version\":(\\d+).*?\"compositionJson\":(\\{.*\\})\\s*\\}", Pattern.DOTALL).matcher(editorBody);
-        assertThat(compositionMatcher.find()).withFailMessage(editorBody).isTrue();
-        long version = Long.parseLong(compositionMatcher.group(1));
+        JsonNode editorJson = mapper.readTree(editor.body()).get("data");
+        long version = editorJson.get("composition").get("version").asLong();
+        assertThat(editorJson.get("composition").get("compositionJson").get("schemaVersion").asText()).isEqualTo("1.1");
 
         var renderResponse = post("/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId + "/render-jobs", "");
         assertThat(renderResponse.statusCode()).isEqualTo(202);
@@ -122,7 +121,9 @@ class RenderPipelineIntegrationTest {
         assertThat(status).isEqualTo("COMPLETED");
         assertThat(jdbc.queryForObject("SELECT composition_version FROM render_jobs WHERE id = ?",
                 Long.class, UUID.fromString(jobId))).isEqualTo(version);
-        assertThat(snapshot).contains("\"schemaVersion\":\"1.1\"");
+        JsonNode snapshotJson = mapper.readTree(snapshot);
+        assertThat(snapshotJson.get("schemaVersion").asText()).isEqualTo("1.1");
+        assertThat(snapshotJson.get("projectId").asText()).isEqualTo(projectId);
         assertThat(rendererBody.get()).contains(jobId).contains(String.valueOf(version)).contains("\"schemaVersion\":\"1.1\"");
 
         var completed = get("/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId + "/render-jobs/" + jobId);
