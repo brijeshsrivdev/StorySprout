@@ -39,6 +39,8 @@ test("stages scene ingredients with accessible selection and preserves existing 
 
   const milo = page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first();
   await milo.click();
+  await expect(milo).toHaveAttribute("aria-pressed", "true");
+  await milo.click();
   await expect(milo).toHaveAttribute("aria-pressed", "false");
   await milo.click();
   await expect(milo).toHaveAttribute("aria-pressed", "true");
@@ -93,6 +95,7 @@ test("presents the Editor as the central creative workspace", async ({ page }) =
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByRole("button", { name: "Save Changes" })).toBeDisabled();
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   await expect(page.getByLabel("Story stage")).toBeVisible();
@@ -109,6 +112,7 @@ test("keeps Editor selection and inspector interactions keyboard accessible", as
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByRole("button", { name: "Save Changes" })).toBeDisabled();
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   const object = page.getByRole("button", { name: "Milo, CHARACTER" });
@@ -188,6 +192,9 @@ test("Preview shows a recoverable error when the saved Composition cannot be loa
 
 test("Editor blocks Preview while Composition edits are unsaved", async ({ page }) => {
   await openSceneSetup(page);
+  await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByRole("button", { name: "Save Changes" })).toBeDisabled();
   await page.getByRole("link", { name: "Open Editor →" }).click();
   const object = page.getByRole("button", { name: /Milo, CHARACTER/ });
   await object.click({ force: true });
@@ -197,7 +204,7 @@ test("Editor blocks Preview while Composition edits are unsaved", async ({ page 
   const preview = page.getByRole("link", { name: "Preview" });
   await expect(preview).toHaveAttribute("aria-disabled", "true");
   const initialUrl = page.url();
-  await preview.click();
+  await preview.click({ force: true });
   await expect(page).toHaveURL(initialUrl);
 });
 
@@ -228,7 +235,7 @@ test("Render produces a real MP4 through the renderer and artifact storage", asy
   await page.getByRole("button", { name: /Garden/ }).first().click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("button", { name: "Save Changes" })).toBeDisabled();
   await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
@@ -273,7 +280,7 @@ test("RenderJob access remains scoped to its Story and Scene", async ({ page }) 
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("button", { name: "Save Changes" })).toBeDisabled();
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   await page.getByRole("button", { name: "Render" }).click();

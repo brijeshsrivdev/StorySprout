@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiError,
   Character,
@@ -117,17 +117,25 @@ export default function SceneSetupPage() {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const propMutations = useRef<Promise<unknown>>(Promise.resolve());
 
   async function getOrCreateSetup(id: string) {
     try {
       return await getSceneSetup(storyId, id);
     } catch (e) {
-      if (e instanceof ApiError && e.status === 404) return createSceneSetup(storyId, id);
-      throw e;
+      if (!(e instanceof ApiError && e.status === 404)) throw e;
+      try {
+        return await createSceneSetup(storyId, id);
+      } catch (createError) {
+        // A concurrent load (e.g. a double-invoked effect) already created the
+        // Scene Setup; the backend reports the duplicate as 409, so read it back.
+        if (createError instanceof ApiError && createError.status === 409) return getSceneSetup(storyId, id);
+        throw createError;
+      }
     }
   }
 
-  async function load() {
+  async function load(isActive: () => boolean = () => true) {
     setLoading(true);
     setError(null);
     try {
@@ -139,6 +147,7 @@ export default function SceneSetupPage() {
         getOrCreateSetup(id),
       ]);
       const normalized = sortSetup(sceneSetup);
+      if (!isActive()) return;
       setOutline(result);
       setSceneId(id);
       setChars(storyCharacters);
@@ -150,14 +159,21 @@ export default function SceneSetupPage() {
       setDirty(false);
       setNotice(null);
     } catch (e) {
+      if (!isActive()) return;
       setError(e instanceof ApiError ? e.message : e instanceof Error ? e.message : "We couldn't load Scene Setup.");
     } finally {
-      setLoading(false);
+      if (isActive()) setLoading(false);
     }
   }
 
   useEffect(() => {
-    void load();
+    // Strict Mode / re-mounts run this twice; a stale response must not clobber
+    // in-progress staging edits, so ignore all but the latest invocation.
+    let active = true;
+    void load(() => active);
+    return () => {
+      active = false;
+    };
   }, [storyId, requestedScene]);
 
   const scenes = outline?.scenes ?? [];
@@ -208,24 +224,29 @@ export default function SceneSetupPage() {
     }
   }
 
-  async function addProp(key: string) {
-    try {
-      const updated = await addSceneProp(storyId, sceneId, key);
-      setSetup(sortSetup(updated));
-      setNotice("Prop added.");
-    } catch (e) {
-      setNotice(e instanceof ApiError ? e.message : "Couldn't add this prop.");
-    }
+  // Prop add/remove each POST then replace the whole setup with the server's
+  // response. Running them concurrently (e.g. two fast clicks) is a last-writer-wins
+  // race that drops instances, so serialize them: each mutation starts only after the
+  // previous one has applied its result.
+  async function runPropMutation(mutate: () => Promise<SceneSetup>, success: string, failure: string) {
+    const run = propMutations.current.then(async () => {
+      try {
+        setSetup(sortSetup(await mutate()));
+        setNotice(success);
+      } catch (e) {
+        setNotice(e instanceof ApiError ? e.message : failure);
+      }
+    });
+    propMutations.current = run;
+    return run;
   }
 
-  async function removeProp(id: string) {
-    try {
-      const updated = await removeSceneProp(storyId, sceneId, id);
-      setSetup(sortSetup(updated));
-      setNotice("Prop removed.");
-    } catch (e) {
-      setNotice(e instanceof ApiError ? e.message : "Couldn't remove this prop.");
-    }
+  function addProp(key: string) {
+    return runPropMutation(() => addSceneProp(storyId, sceneId, key), "Prop added.", "Couldn't add this prop.");
+  }
+
+  function removeProp(id: string) {
+    return runPropMutation(() => removeSceneProp(storyId, sceneId, id), "Prop removed.", "Couldn't remove this prop.");
   }
 
   if (loading) {

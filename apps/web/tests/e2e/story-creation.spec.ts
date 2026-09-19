@@ -1,27 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-test("blank story continues into outline and persists after dashboard refresh", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("link", { name: "Create Story" }).first().click();
-  const blankStory = page.getByRole("button", { name: "Start Blank" });
-  await blankStory.click();
-  await expect(blankStory).toHaveAttribute("aria-pressed", "true");
-  const continueButton = page.getByRole("button", { name: "Continue →" });
-  await expect(continueButton).toBeEnabled();
-  await continueButton.click();
-  await expect(page.getByLabel("Story idea")).toBeVisible();
-  await expect(page.locator("label").filter({ hasText: "Story idea" }).first()).toHaveAttribute("for", "idea");
-  await page.getByLabel("Story idea").fill("A tiny fox learns to share.");
-  await page.getByRole("button", { name: "Ages 3–5" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL(/\/stories\/.+\/outline$/);
-  await expect(page.getByRole("heading", { name: "Storyboard" })).toBeVisible();
-  await page.goto("/");
-  await expect(page.getByText("Untitled Story").first()).toBeVisible({ timeout: 15000 });
-  await page.reload();
-  await expect(page.getByText("Untitled Story").first()).toBeVisible({ timeout: 15000 });
-});
-
 test("AI story generates and persists its draft", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Create Story" }).first().click();

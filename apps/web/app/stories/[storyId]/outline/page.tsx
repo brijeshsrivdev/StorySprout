@@ -55,28 +55,36 @@ export default function StoryOutlinePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [creatorShaped, setCreatorShaped] = useState(false);
 
-  async function loadOutline() {
+  async function loadOutline(isActive: () => boolean = () => true) {
     setLoading(true);
     setError(null);
     try {
       const result = await getOutline(storyId);
+      if (!isActive()) return;
       setOutline(result);
       setScenes(result.scenes);
       setDeleted([]);
       setDirty(false);
     } catch (e) {
+      if (!isActive()) return;
       setError(
         e instanceof ApiError && e.status === 404
           ? "Story not found."
           : "We couldn't load this outline.",
       );
     } finally {
-      setLoading(false);
+      if (isActive()) setLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadOutline();
+    // Strict Mode / re-mounts run this effect twice; a stale response must not
+    // clobber locally-added scenes, so ignore all but the latest invocation.
+    let active = true;
+    void loadOutline(() => active);
+    return () => {
+      active = false;
+    };
   }, [storyId]);
 
   const planned = useMemo(
