@@ -43,6 +43,35 @@ test("renderer produces deterministic 1080p 16:9 MP4 output", async () => {
     { input: first }
   );
   assert.match(probe.toString().trim(), /1920,1080,30\/1/);
+  const codec = execFileSync(
+    "ffprobe",
+    ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,pix_fmt", "-of", "default=noprint_wrappers=1", "pipe:0"],
+    { input: first }
+  ).toString();
+  assert.match(codec, /codec_name=h264/);
+  assert.match(codec, /pix_fmt=yuv420p/);
+});
+
+test("renderer rejects malformed external Composition payloads", () => {
+  const invalid = structuredClone(request) as unknown as Record<string, unknown>;
+  const composition = invalid.composition as Record<string, unknown>;
+  const scene = (composition.scenes as Array<Record<string, unknown>>)[0];
+  scene.objects = [{
+    id: "o",
+    assetId: "character-1",
+    x: 9999,
+    y: 100,
+    scale: 1,
+    rotation: 0,
+    visible: true
+  }];
+  assert.throws(() => validateRenderRequest(invalid), /Composition/);
+});
+
+test("renderer rejects missing render metadata", () => {
+  const invalid = structuredClone(request) as unknown as Record<string, unknown>;
+  delete invalid.renderJobId;
+  assert.throws(() => validateRenderRequest(invalid), /RenderJob id/);
 });
 
 test("renderer rejects Timeline content", () => {
