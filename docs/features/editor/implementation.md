@@ -4,11 +4,15 @@
 **Specification:** `docs/specifications/editor.md` — SPEC-006  
 **Clarification:** `docs/specifications/editor-clarifications.md`  
 **Decision:** ADR-014  
-**Status:** IN_PROGRESS — implementation complete in branch; final repository validation pending
+**Status:** VALIDATED — functional implementation complete; visual/UX polish milestone completed on `feature/storysprout-ui-foundation` (new UI validation pending)
 
 ## Feature purpose
 
 The Editor is the first visual authoring layer after Scene Setup. It initializes one Outline Scene into a canonical Composition, lets the creator edit basic visual state, and explicitly saves that Composition for future Timeline/Renderer consumption.
+
+## Visual/UX polish milestone
+
+The existing Editor remains the functional SPEC-006 implementation. This milestone changes presentation only: compact creative-workstation shell, creator-oriented asset toolkit, dominant 1920 × 1080 stage, contextual inspector grouping, stronger selection/empty states, deliberate Timeline boundary styling, and clearer save/conflict feedback. No Composition, API, persistence, renderer or domain behavior changed.
 
 ## Acceptance criteria reference
 
@@ -103,8 +107,12 @@ Renderer implementation is unchanged. Editor produces versioned Composition 1.1 
 
 - `apps/web/tests/editor-model.test.ts` — schema 1.1, fixed stage, explicit 1.0 migration and no type inference.
 - `apps/api/src/test/java/com/storysprout/api/editor/EditorServiceTest.java` — initialization typing, existing reopen, empty Timeline and stale-save conflict.
-- `apps/web/tests/e2e/scene-setup.spec.ts` — full Story → Outline → Characters → Scene Setup → Editor → move → scale → Save → reload flow.
+- `apps/web/tests/e2e/scene-setup.spec.ts` — full Story → Outline → Characters → Scene Setup → Editor → move → scale → Save → reload flow, plus Editor workstation/keyboard UI assertions.
 - Existing Story Creation, Story Outline, Characters and Scene Setup suites remain as regression coverage in the repository CI workflow.
+
+## Validation for this UI milestone
+
+Local frontend execution was not available because the environment could not reach repository/build services. No new lint, typecheck, build or Playwright result is claimed for this visual milestone. The previous functional Editor CI validation remains the basis for unchanged model/backend behavior.
 
 ## Known limitations / deviations
 
@@ -148,3 +156,7 @@ ADR-001, ADR-002, ADR-005, ADR-006, ADR-007, ADR-009, ADR-011, ADR-012 and ADR-0
 | `docs/api/api-conventions.md` | API contract | Shared response/error envelope. |
 | `docs/features/FEATURE_INDEX.md` | Feature index | Editor implementation status. |
 | `docs/project/current-state.md` | Project memory | Editor implementation/validation state. |
+
+## P1 remediation — Story World continuity and workspace tokens
+
+The Editor now preserves the `Project → Story → Scene` relationship in its workspace header and labels the toolkit as `Story Characters`, with existing character names/category context retained. Its dark workspace palette is now represented by shared StorySprout editor tokens in `globals.css` rather than an unrelated set of hard-coded surface colors. Composition, API, and renderer behavior are unchanged.

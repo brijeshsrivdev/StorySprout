@@ -277,3 +277,7 @@ Existing persisted outline content is not replaced by a failed generation reques
 | `apps/web/tests/e2e/story-creation.spec.ts` | Story Creation regression | Verifies approved Story → Outline continuation remains compatible with existing Story Creation flow. |
 | `apps/api/src/test/java/com/storysprout/api/outline/StoryOutlineServiceTest.java` | Backend unit tests | Domain/service duration and mutation rules. |
 | `apps/api/src/test/java/com/storysprout/api/outline/StoryOutlineControllerIntegrationTest.java` | Backend integration tests | PostgreSQL-backed API/persistence coverage. |
+
+## P1 remediation — AI draft UX boundary
+
+The Outline UI now labels an AI-generated outline as an `AI-generated starting point` and switches to `Creator-shaped outline` after creator edits. This is presentation-only state; persisted outline semantics and the existing non-destructive regeneration protection remain unchanged.

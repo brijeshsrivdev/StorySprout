@@ -2,11 +2,26 @@
 
 **Feature:** Characters  
 **Specification:** `docs/specifications/characters.md` (SPEC-004)  
-**Status:** IMPLEMENTED — final CI validation pending
+**Status:** IMPLEMENTED — functional behavior validated previously; UI foundation milestone pending local execution
 
 ## Feature purpose
 
 Characters establishes a practical Project-scoped reusable character library and explicit Story membership before Scene Setup. Characters are canonical creator-owned planning/asset-reference records; no visual asset pipeline or Composition data is created.
+
+## UI foundation milestone
+
+The Characters experience now presents the existing domain as a reusable creative cast rather than an administrative record list.
+
+The visual treatment:
+- uses the shared StorySprout UI foundation and design tokens;
+- presents Story membership and the reusable Project library as distinct creative surfaces;
+- uses deterministic initials/category placeholder visuals instead of emoji, external image URLs, or generated images;
+- keeps the five canonical V1 fields focused and approachable;
+- makes shared Project-character editing explicit;
+- treats AI output as an editable suggestion with an explicit review/create step;
+- keeps destructive membership/library actions visually distinct and preserves existing server-side safety behavior;
+- provides loading, empty, failure, saving and AI-generation states with accessible semantics;
+- adapts the character cards and creation workflow for desktop, tablet and narrow layouts.
 
 ## Specification / acceptance criteria
 
@@ -41,20 +56,20 @@ Characters remain outside `packages/editor-model`. Scene-level placement and Com
 ## Frontend implementation
 
 `apps/web/app/stories/[storyId]/characters/page.tsx` provides:
-- Story-specific character list.
-- Project reusable character library.
-- Manual create/edit form.
+- Story-specific character list with clear `In this Story` membership context.
+- Project reusable Character library with explicit `Project Cast` context.
+- Intentional deterministic placeholder visuals based on character initials/category.
+- Manual create/edit form using shared `Field`, `Input`, `Textarea`, `Select` and `Button` primitives.
 - Add/remove Story membership.
 - Project Character deletion with reference protection.
-- AI suggestion form.
-- Deterministic category/name placeholder avatars.
-- Empty, loading and error states.
-- Explicit shared-character messaging.
+- AI suggestion flow: Describe → Suggest → Review → Create.
+- AI suggestion status and retry without automatic persistence.
+- Shared-character warning before editing/saving.
+- Loading, empty, API failure, save, delete/membership failure and generation states.
+- Responsive card/form layout and keyboard-visible focus treatment.
 - Continue to existing Scene Setup placeholder.
 
-`apps/web/lib/api.ts` adds typed Character models and REST functions.
-
-Story Outline's continuation now routes to Characters. The Scene Setup page remains a placeholder and only changes its return link/message.
+`apps/web/lib/api.ts` retains the existing typed Character REST operations and contracts; no API client contract was changed.
 
 ## Backend implementation
 
@@ -104,8 +119,6 @@ CharacterGeneration.Generator.generate(CharacterGeneration.Request)
 - existing `GeminiAiProperties`;
 - existing `gemini-2.5-flash` configuration.
 
-`GeminiCharacterPromptBuilder` supplies creator context and approved Character categories. Typed provider structured output is validated before being returned. AI returns only editable identity fields; no database IDs or media/Composition state.
-
 ## Renderer impact
 
 None. Renderer is unchanged. No Composition, TimelineClip, SceneObject, animation, camera or render data is produced.
@@ -121,7 +134,7 @@ None. Renderer is unchanged. No Composition, TimelineClip, SceneObject, animatio
 - `DELETE /api/v1/stories/{storyId}/characters/{characterId}`
 - `POST /api/v1/projects/{projectId}/characters/generate`
 
-Existing `{ data: ... }` success and `{ error: ... }` error envelopes remain authoritative.
+No API contract or backend behavior changed in this UI milestone.
 
 ## Data model
 
@@ -145,42 +158,37 @@ No image URL, asset ID, scene placement, pose, animation, timing, dialogue or Co
 
 ## Error handling
 
+The UI surfaces the existing API status/error messages without weakening server-side rules:
 - 400 — Character validation failures.
 - 404 — Project, Story, or Character not found.
 - 409 — cross-project membership, duplicate membership, or deletion of referenced Character.
 - 422 — controlled AI generation failure.
 - 500 — unexpected failures through existing handler.
 
-AI suggestion failure does not create or modify a Character.
-
 ## Security considerations
 
-- No authentication/authorization added.
-- Character text is treated as untrusted creator/AI content.
-- Input lengths are bounded in application validation and database schema.
-- AI credentials remain external configuration.
-- Provider prompts and generated content are not logged by the Character adapter.
+No authentication/authorization, provider credentials, or persistence semantics were changed.
 
 ## Automated tests
 
-### Backend unit
-`apps/api/src/test/java/com/storysprout/api/character/CharacterServiceTest.java` covers Project ownership, Character creation, AI suggestion non-persistence, cross-project rejection, membership removal, and referenced-character deletion protection.
-
-### Backend integration/API
-`apps/api/src/test/java/com/storysprout/api/character/CharacterControllerIntegrationTest.java` uses PostgreSQL Testcontainers/Flyway and covers Character persistence, reuse across two Stories, membership removal preserving the Character, duplicate membership conflict, and referenced deletion conflict.
-
 ### Frontend / E2E
-`apps/web/tests/e2e/characters.spec.ts` covers Story Outline → Characters navigation, create/add, removal while preserving Project reuse, and AI suggestion without automatic persistence.
+`apps/web/tests/e2e/characters.spec.ts` now covers:
+- Character library and empty state;
+- manual create with canonical fields and category selection;
+- edit of a shared Project Character;
+- remove Story membership while retaining reusable library membership;
+- delete after membership removal;
+- AI suggestion remaining non-persistent until explicit creation;
+- form validation and keyboard-accessible category selection.
 
-Existing Story Creation and Story Outline E2E suites remain part of repository regression validation.
+Backend unit/integration coverage remains unchanged because this milestone changes presentation and frontend interaction only.
 
 ## Known limitations
 
-- Actual image generation/upload is intentionally not implemented; UI uses a deterministic placeholder/avatar.
+- Local frontend execution is unavailable in the current environment because repository/build services cannot be reached.
+- Actual image generation/upload remains intentionally unimplemented; UI uses deterministic placeholder visuals.
 - Project-level Character editing is shared across all Stories using that Character; per-Story forks are deferred.
-- There is no global/account-wide library, marketplace, advanced search, versioning, or asset lifecycle.
-- Scene-level placement is deferred to Scene Setup.
-- Real Gemini smoke testing remains outside normal CI.
+- No global/account-wide library, marketplace, advanced search, versioning, or asset lifecycle exists.
 
 ## Future improvements
 
@@ -202,30 +210,14 @@ Existing Story Creation and Story Outline E2E suites remain part of repository r
 
 | File | Responsibility | Important interaction |
 |---|---|---|
-| `apps/api/src/main/resources/db/migration/V4__characters.sql` | Character schema | Creates Project Characters and Story membership with FKs and duplicate protection. |
-| `apps/api/src/main/java/com/storysprout/api/character/Character.java` | Domain record | Canonical reusable Project Character. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterCategory.java` | Domain enum | Approved V1 categories. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterRequests.java` | API input contracts | Create/update/generation request shapes. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterGeneration.java` | AI capability boundary | Provider-independent request/result/generator contract. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterRepository.java` | Persistence | Character CRUD and Story membership queries/mutations. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterService.java` | Application service | Validation, ownership, reuse, membership, deletion protection and AI suggestion orchestration. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterResponse.java` | API response | Serializes persisted Character identity. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterController.java` | REST API | Exposes Project/Story Character and generation endpoints. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterNotFoundException.java` | Error handling | Controlled 404. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterConflictException.java` | Error handling | Controlled 409. |
-| `apps/api/src/main/java/com/storysprout/api/character/CharacterGenerationException.java` | Error handling | Controlled 422 AI failure. |
-| `apps/api/src/main/java/com/storysprout/api/character/DeterministicCharacterGenerator.java` | AI fake | Credential-free deterministic CI/default provider. |
-| `apps/api/src/main/java/com/storysprout/api/ai/infrastructure/google/GeminiCharacterGenerator.java` | Gemini adapter | Reuses ChatClient/executor/config and validates typed output. |
-| `apps/api/src/main/java/com/storysprout/api/ai/infrastructure/google/GeminiCharacterPromptBuilder.java` | Gemini prompt | Builds provider-specific Character generation prompt. |
-| `apps/api/src/main/java/com/storysprout/api/ai/infrastructure/google/GeminiCharacterResponse.java` | Gemini DTO | Infrastructure-only structured response. |
-| `apps/api/src/main/java/com/storysprout/api/story/ApiExceptionHandler.java` | Shared errors | Maps Character 404/409/422 to existing API envelope. |
-| `apps/web/lib/api.ts` | Frontend API client | Typed Character REST operations. |
-| `apps/web/app/stories/[storyId]/outline/page.tsx` | Navigation | Continues Story Outline to Characters. |
-| `apps/web/app/stories/[storyId]/characters/page.tsx` | Characters UI | Story membership, reusable library, CRUD and AI suggestion workflow. |
-| `apps/web/app/stories/[storyId]/scene-setup/page.tsx` | Navigation placeholder | Receives Characters continuation without implementing Scene Setup. |
-| `apps/web/tests/e2e/characters.spec.ts` | E2E tests | Proves creator navigation, create/reuse/removal and AI non-persistence. |
-| `apps/api/src/test/java/com/storysprout/api/character/CharacterServiceTest.java` | Unit tests | Service ownership/membership/AI rules. |
-| `apps/api/src/test/java/com/storysprout/api/character/CharacterControllerIntegrationTest.java` | Integration tests | PostgreSQL/Flyway/API persistence and membership proof. |
+| `apps/web/app/stories/[storyId]/characters/page.tsx` | Characters creative library UI | Reads existing Character APIs; presents Story membership, reusable Project library, CRUD and AI suggestion workflow without changing canonical contracts. |
+| `apps/web/lib/api.ts` | Frontend API client | Existing Character types/endpoints remain unchanged. |
+| `apps/web/tests/e2e/characters.spec.ts` | Characters UI E2E | Verifies library, create/edit/remove/delete, AI suggestion, validation and accessibility interactions. |
+| `apps/api/src/main/java/com/storysprout/api/character/CharacterService.java` | Application service | Existing ownership, membership, reuse and deletion safety remain authoritative. |
+| `apps/api/src/main/java/com/storysprout/api/character/CharacterController.java` | REST API | Existing Character endpoints remain unchanged. |
+| `apps/api/src/main/resources/db/migration/V4__characters.sql` | Character persistence | Existing Project/Story ownership model remains unchanged. |
 | `docs/specifications/characters.md` | Specification | SPEC-004 source of truth. |
-| `docs/features/FEATURE_INDEX.md` | Feature memory | Tracks implementation status. |
-| `docs/project/current-state.md` | Project memory | Records current implementation/validation state. |
+
+## P1 remediation — shared accessibility and membership actions
+
+The P1 UI remediation keeps `Field` responsible for label/control association and removes the unusable library-delete action from Story Character cards. Story membership continues to use `Remove from Story`; Project Character Library retains deletion only where the existing domain rules allow it. Backend deletion protection and Character contracts are unchanged.

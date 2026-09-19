@@ -47,6 +47,8 @@ jobs:
         with:
           node-version: 24
       - run: npm install --workspaces --include-workspace-root
+      - run: npm --workspace services/renderer run typecheck
+      - run: npm --workspace services/renderer run test
       - run: npm --workspace services/renderer run build
 
   e2e:
@@ -63,7 +65,7 @@ jobs:
           java-version: 21
       - run: npm install --workspaces --include-workspace-root
       - run: npx playwright install chromium
-      - run: docker compose up -d postgres
+      - run: docker compose up -d postgres minio renderer
       - run: |
           for i in {1..60}; do
             if docker compose exec -T postgres pg_isready -U storysprout -d storysprout; then
@@ -88,6 +90,16 @@ jobs:
           done
           echo 'Timed out waiting for StorySprout API health endpoint.'
           cat /tmp/storysprout-api.log
+          exit 1
+      - run: |
+          for i in {1..60}; do
+            if curl -fsS --max-time 2 http://127.0.0.1:4000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'Timed out waiting for StorySprout renderer.'
+          docker compose logs renderer
           exit 1
       - run: |
           for i in {1..60}; do

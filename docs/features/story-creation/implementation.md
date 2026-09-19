@@ -189,3 +189,7 @@ No new architecture ADR was required.
 | `docs/api/api-conventions.md` | API documentation | Defines reusable success/error envelope | Governs Story Creation responses |
 | `docs/features/FEATURE_INDEX.md` | Feature memory | Tracks Story Creation implementation status | Links specification/implementation |
 | `docs/project/current-state.md` | Project memory | Records implementation and validation state | Keeps future agents aligned |
+
+## P1 remediation — AI draft review boundary
+
+AI Story Creation now pauses after a successful generation so the creator can review the returned `draftContent` before continuing to Story Outline. The existing Story Creation API contract and canonical persistence remain unchanged. Blank Story behavior continues directly to the existing continuation path, and generation failure/retry behavior remains intact.

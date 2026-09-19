@@ -38,3 +38,5 @@ Do not duplicate the established product documents. Refer to `docs/product/v1-sc
 
 ## Product experience specifications
 - `docs/specifications/ui-ux.md` — StorySprout UI/UX Foundation (SPEC-UIUX-001), design-only specification for the creator experience and visual language.
+
+- `docs/specifications/preview-render.md` — Preview + Render Foundation: canonical Composition preview, immutable RenderJob snapshots, renderer, storage and MP4 artifact flow.

@@ -27,14 +27,6 @@ The implementation document must describe the feature end-to-end and include a *
 - Related decisions
 - File-by-file implementation map
 
-## Status vocabulary
-- `PLANNED` — intended but not implemented.
-- `SPECIFIED` — specification and acceptance criteria exist.
-- `IN_PROGRESS` — implementation underway.
-- `IMPLEMENTED` — implementation exists; final validation may still be pending.
-- `VALIDATED` — appropriate automated validation has passed.
-- `DEPRECATED` — retained for historical reference but no longer active.
-
 ## Current feature inventory
 | Feature | Status | Specification | Implementation | Tests | Major dependencies |
 |---|---|---|---|---|---|
@@ -42,8 +34,14 @@ The implementation document must describe the feature end-to-end and include a *
 | Story Creation | VALIDATED | `docs/specifications/story-creation.md` | `docs/features/story-creation/implementation.md` | Frontend unit/component, backend unit/integration, API/persistence, Playwright E2E | Next.js, Spring Boot, PostgreSQL, Testcontainers, internal StoryGenerator boundary |
 | AI Provider Integration | VALIDATED | `docs/specifications/ai-provider-integration.md` | `docs/features/ai-provider-integration/implementation.md` | Gemini adapter, prompt, structured-output, reliability, configuration and provider-selection tests; CI Web/API/Renderer/E2E passed | Spring AI 2.0.1, Google GenAI/Gemini, existing StoryGenerator boundary |
 | Story Outline | VALIDATED | `docs/specifications/story-outline.md` | `docs/features/story-outline/implementation.md` | Backend unit/integration, frontend duration unit, PostgreSQL/Testcontainers, Playwright E2E; full CI validation passed | Existing Story Creation, Spring AI/Gemini infrastructure, PostgreSQL, Next.js |
-| Characters | VALIDATED | `docs/specifications/characters.md` | `docs/features/characters/implementation.md` | Backend unit/integration, frontend/E2E coverage; merged CI passed | Story Outline, existing Spring AI/Gemini infrastructure, PostgreSQL, Next.js |
-| Scene Setup | VALIDATED | `docs/specifications/scene-setup.md` | `docs/features/scene-setup/implementation.md` | Backend unit/integration, PostgreSQL/Flyway, Playwright E2E; full CI passed | Story Outline, Characters, PostgreSQL, Next.js |
-| Editor | VALIDATED | `docs/specifications/editor.md` + `docs/specifications/editor-clarifications.md` | `docs/features/editor/implementation.md` | Model regression, backend service tests, Scene Setup → Editor Playwright flow; full CI passed in run `35349746183` | Scene Setup, Characters, Story Outline, Composition schema 1.1, PostgreSQL, Next.js |
+| Characters | VALIDATED | `docs/specifications/characters.md` | `docs/features/characters/implementation.md` | Backend unit/integration previously validated; Characters UI E2E added for the UI foundation milestone, local execution unavailable | Story Outline, existing Spring AI/Gemini infrastructure, PostgreSQL, Next.js |
+| Scene Setup | IMPLEMENTED | `docs/specifications/scene-setup.md` | `docs/features/scene-setup/implementation.md` | Scene Setup UI E2E updated; local execution unavailable; prior backend/E2E validation retained | Story Outline, Characters, PostgreSQL, Next.js |
+| Editor | VALIDATED | `docs/specifications/editor.md` + `docs/specifications/editor-clarifications.md` | `docs/features/editor/implementation.md` — functional Editor plus visual/UX polish | Model regression, backend service tests, Scene Setup → Editor Playwright flow; Editor UI assertions added for the visual milestone; new UI execution unavailable | Scene Setup, Characters, Story Outline, Composition schema 1.1, PostgreSQL, Next.js |
 
-AI Provider Integration uses the approved initial model `gemini-2.5-flash`. Real-provider validation remains opt-in/manual and normal CI remains credential-free.
+## P1 remediation milestone
+The UI foundation received a focused P1 remediation after the cross-screen audit: shared form accessibility, valid Character membership actions, AI review boundaries, Story World continuity, and Editor/dashboard token coherence. See the feature implementation documents for the affected flows. Timeline remains out of scope; Preview and Render are the next product milestone.
+
+
+## Preview + Render Foundation milestone
+| Preview | IMPLEMENTED | `docs/specifications/preview-render.md` | `docs/features/preview/implementation.md` | Repository tests not executed in current environment | Existing Composition 1.1, editor-model shared interpretation, Next.js |
+| Render | IMPLEMENTED | `docs/specifications/preview-render.md` | `docs/features/render/implementation.md` | Repository tests not executed in current environment | Spring Boot, PostgreSQL, MinIO/S3-compatible storage, FFmpeg, renderer service |
