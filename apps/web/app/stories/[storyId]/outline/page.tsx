@@ -351,7 +351,7 @@ export default function StoryOutlinePage() {
           </div>
         )}
 
-        {outline.story.creationMode === "AI" && scenes.length > 0 && (
+        {scenes.length > 0 && (
           <div className="mt-6">
             <Notice tone={creatorShaped ? "info" : "ai"}>
               <div>
@@ -372,11 +372,16 @@ export default function StoryOutlinePage() {
                 Storyboard
               </h2>
             </div>
-            {scenes.length > 0 && (
-              <p className="text-sm text-[var(--ss-muted)]">
-                {scenes.length} {scenes.length === 1 ? "scene" : "scenes"} in sequence
-              </p>
-            )}
+            <div className="flex items-center gap-3">
+              {scenes.length > 0 && (
+                <p className="text-sm text-[var(--ss-muted)]">
+                  {scenes.length} {scenes.length === 1 ? "scene" : "scenes"} in sequence
+                </p>
+              )}
+              <Button variant="secondary" onClick={add}>
+                + Add Scene
+              </Button>
+            </div>
           </div>
 
           {scenes.length === 0 ? (
@@ -386,9 +391,14 @@ export default function StoryOutlinePage() {
                 title="Your story is ready for its first beats."
                 description="Turn the story into an ordered sequence of scenes. You can review and edit every beat before moving into scene preparation."
                 action={
-                  <Button variant="ai" onClick={() => void generate()} disabled={generating}>
-                    {generating ? "Generating outline…" : "Generate Outline"}
-                  </Button>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button variant="ai" onClick={() => void generate()} disabled={generating}>
+                      {generating ? "Generating outline…" : "Generate Outline"}
+                    </Button>
+                    <Button variant="secondary" onClick={add} disabled={generating}>
+                      + Add Scene
+                    </Button>
+                  </div>
                 }
               />
             </div>

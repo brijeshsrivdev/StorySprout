@@ -2,23 +2,27 @@ import { expect, test } from "@playwright/test";
 
 async function openSceneSetup(page: import("@playwright/test").Page) {
   await page.goto("/create");
-  await page.getByRole("button", { name: "Blank Story" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Start Blank" }).click();
+  await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByLabel("Story idea").fill("Milo stages a garden discovery.");
   await page.getByRole("button", { name: "Ages 6–8" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "+ Add Scene" }).click();
+  await page.getByRole("button", { name: "+ Add Scene" }).first().click();
   await page.getByLabel("Scene 1 title").fill("Garden Discovery");
   await page.getByLabel("Scene 1 summary").fill("Milo discovers a butterfly in the garden.");
   await page.getByLabel("Scene 1 duration").fill("45");
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("link", { name: /Continue to Characters/ })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("link", { name: /Continue to Characters/ }).click();
   await page.getByLabel("Name").fill("Milo");
-  await page.getByLabel("Role \/ description").fill("A curious little rabbit");
+  await page.getByLabel("Role / description").fill("A curious little rabbit");
   await page.getByLabel("Visual description").fill("Small brown rabbit with a blue scarf");
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
+  await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
-  await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible({ timeout: 15000 });
   await expect(page.getByText("Project", { exact: true })).toBeVisible();
   await expect(page.getByText("Story", { exact: true })).toBeVisible();
   await expect(page.getByText("Scene", { exact: true })).toBeVisible();
@@ -87,6 +91,7 @@ test("presents the Editor as the central creative workspace", async ({ page }) =
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   await expect(page.getByLabel("Story stage")).toBeVisible();
@@ -103,6 +108,7 @@ test("keeps Editor selection and inspector interactions keyboard accessible", as
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   const object = page.getByRole("button", { name: "Milo, CHARACTER" });
@@ -144,6 +150,7 @@ test("Preview renders the saved Composition and uses the canonical visual semant
   await milo.click();
   await page.getByRole("button", { name: "+ Wooden Chair" }).click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
 
   await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
@@ -175,7 +182,7 @@ test("Preview shows a recoverable error when the saved Composition cannot be loa
   });
   await page.goto("/stories/test-story/preview?scene=test-scene");
   await expect(page.getByRole("heading", { name: "Preview unavailable" })).toBeVisible();
-  await expect(page.getByRole("alert")).toContainText("Saved Composition is temporarily unavailable.");
+  await expect(page.getByRole("alert").first()).toContainText("Saved Composition is temporarily unavailable.");
   await expect(page.getByRole("link", { name: "Return to Editor" })).toHaveAttribute("href", /\/stories\/test-story\/editor\?scene=test-scene/);
 });
 
@@ -197,26 +204,31 @@ test("Editor blocks Preview while Composition edits are unsaved", async ({ page 
 
 test("Render produces a real MP4 through the renderer and artifact storage", async ({ page }) => {
   await page.goto("/create");
-  await page.getByRole("button", { name: "Blank Story" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Start Blank" }).click();
+  await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByLabel("Story idea").fill("A rabbit visits a garden.");
   await page.getByRole("button", { name: "Ages 6–8" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "+ Add Scene" }).click();
+  await page.getByRole("button", { name: "+ Add Scene" }).first().click();
   await page.getByLabel("Scene 1 title").fill("Render Smoke Test");
   await page.getByLabel("Scene 1 summary").fill("A one second render smoke test.");
   await page.getByLabel("Scene 1 duration").fill("1");
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
 
+  await expect(page.getByRole("link", { name: /Continue to Characters/ })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("link", { name: /Continue to Characters/ }).click();
   await page.getByLabel("Name").fill("Milo");
   await page.getByLabel("Role \/ description").fill("A curious little rabbit");
   await page.getByLabel("Visual description").fill("Small brown rabbit");
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
+  await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await page.getByRole("button", { name: /Garden/ }).first().click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
@@ -239,24 +251,29 @@ test("Render produces a real MP4 through the renderer and artifact storage", asy
 
 test("RenderJob access remains scoped to its Story and Scene", async ({ page }) => {
   await page.goto("/create");
-  await page.getByRole("button", { name: "Blank Story" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Start Blank" }).click();
+  await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByLabel("Story idea").fill("A rabbit renders a garden scene.");
   await page.getByRole("button", { name: "Ages 6–8" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "+ Add Scene" }).click();
+  await page.getByRole("button", { name: "+ Add Scene" }).first().click();
   await page.getByLabel("Scene 1 title").fill("Scoped Render");
   await page.getByLabel("Scene 1 summary").fill("A render access scope test.");
   await page.getByLabel("Scene 1 duration").fill("1");
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("link", { name: /Continue to Characters/ })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("link", { name: /Continue to Characters/ }).click();
   await page.getByLabel("Name").fill("Milo");
   await page.getByLabel("Role \/ description").fill("A rabbit");
   await page.getByLabel("Visual description").fill("A small brown rabbit");
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
+  await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   await page.getByRole("button", { name: "Render" }).click();
