@@ -124,6 +124,7 @@ class RenderPipelineIntegrationTest {
         JsonNode snapshotJson = mapper.readTree(snapshot);
         assertThat(snapshotJson.get("schemaVersion").asText()).isEqualTo("1.1");
         assertThat(snapshotJson.get("projectId").asText()).isEqualTo(projectId);
+        assertThat(jdbc.queryForObject("SELECT artifact_key FROM render_jobs WHERE id = ?", String.class, UUID.fromString(jobId))).startsWith("renders/" + jobId + "/attempt-1.mp4");
         assertThat(rendererBody.get()).contains(jobId).contains(String.valueOf(version)).contains("\"schemaVersion\":\"1.1\"");
 
         var completed = get("/api/v1/stories/" + storyId + "/outline-scenes/" + sceneId + "/render-jobs/" + jobId);
