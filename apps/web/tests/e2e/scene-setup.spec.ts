@@ -238,11 +238,35 @@ test("Render produces a real MP4 through the renderer and artifact storage", asy
 
 
 test("RenderJob access remains scoped to its Story and Scene", async ({ page }) => {
-  await openSceneSetup(page);
+  await page.goto("/create");
+  await page.getByRole("button", { name: "Blank Story" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Story idea").fill("A rabbit renders a garden scene.");
+  await page.getByRole("button", { name: "Ages 6–8" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "+ Add Scene" }).click();
+  await page.getByLabel("Scene 1 title").fill("Scoped Render");
+  await page.getByLabel("Scene 1 summary").fill("A render access scope test.");
+  await page.getByLabel("Scene 1 duration").fill("1");
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await page.getByRole("link", { name: /Continue to Characters/ }).click();
+  await page.getByLabel("Name").fill("Milo");
+  await page.getByLabel("Role \/ description").fill("A rabbit");
+  await page.getByLabel("Visual description").fill("A small brown rabbit");
+  await page.getByRole("button", { name: "Create & Add to Story" }).click();
+  await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
+  await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
   await page.getByRole("link", { name: "Open Editor →" }).click();
-  const response = await page.request.get(
-    new URL("/api/v1/stories/00000000-0000-0000-0000-000000000000/outline-scenes/00000000-0000-0000-0000-000000000000/render-jobs/00000000-0000-0000-0000-000000000000",
-      page.url()).toString()
+
+  await page.getByRole("button", { name: "Render" }).click();
+  await expect(page.getByText(/completed · 100% · Composition v1/i)).toBeVisible({ timeout: 120000 });
+  const openMp4 = page.getByRole("link", { name: "Open MP4" });
+  const jobArtifact = await openMp4.getAttribute("href");
+  if (!jobArtifact) throw new Error("Render artifact URL missing");
+  const jobPath = new URL(jobArtifact, page.url()).pathname;
+  const wrongScene = await page.request.get(
+    new URL(jobPath.replace(/outline-scenes\/[0-9a-f-]+/, "outline-scenes/00000000-0000-0000-0000-000000000000"), page.url()).toString()
   );
-  expect(response.status()).toBe(404);
+  expect(wrongScene.status()).toBe(404);
 });
