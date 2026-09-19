@@ -11,11 +11,31 @@ export default function Dashboard() {
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState<string|null>(null);
 
-  useEffect(()=>{ listProjects().then(async ps=>{
-    setProjects(ps);
-    const entries=await Promise.all(ps.map(async p=>[p.id,await listStories(p.id).catch(()=>[])] as const));
-    setStories(Object.fromEntries(entries));
-  }).catch(()=>setError("We couldn't load your studio. Please try again.")).finally(()=>setLoading(false)); },[]);
+  useEffect(() => {
+    let active = true;
+    async function loadStudio() {
+      setLoading(true);
+      setError(null);
+      try {
+        const ps = await listProjects();
+        const entries = await Promise.all(
+          ps.map(async (p) => [p.id, await listStories(p.id).catch(() => [])] as const)
+        );
+        if (active) {
+          setProjects(ps);
+          setStories(Object.fromEntries(entries));
+        }
+      } catch {
+        if (active) setError("We couldn't load your studio. Please try again.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    void loadStudio();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return <StudioShell>
     <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8 lg:py-8">

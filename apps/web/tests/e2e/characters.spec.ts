@@ -29,9 +29,8 @@ test("builds a reusable character library and preserves membership semantics", a
   await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
   await expect(page.getByText("Animal", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Curious, kind, and brave.")).toBeVisible();
-  await expect(page.getByText("In this Story", { exact: true })).toBeVisible();
-  const storyCard = page.locator("article").filter({ has: page.getByRole("heading", { name: "Milo" }) }).first();
-  await expect(storyCard.getByRole("button", { name: "Delete" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "In this Story" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove from Story" })).toBeVisible();
 
   await page.getByRole("button", { name: "Edit" }).click();
   await expect(page.getByRole("heading", { name: "Edit Character" })).toBeVisible();

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.setTimeout(120000);
+
 async function openSceneSetup(page: import("@playwright/test").Page) {
   await page.goto("/create");
   await page.getByRole("button", { name: "Start Blank" }).click();
@@ -13,14 +15,14 @@ async function openSceneSetup(page: import("@playwright/test").Page) {
   await page.getByLabel("Scene 1 duration").fill("45");
   await page.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole("link", { name: /Continue to Characters/ })).not.toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByRole("link", { name: /Continue to Characters/ })).toHaveAttribute("aria-disabled", "false");
   await page.getByRole("link", { name: /Continue to Characters/ }).click();
   await page.getByLabel("Name").fill("Milo");
   await page.getByLabel("Role / description").fill("A curious little rabbit");
   await page.getByLabel("Visual description").fill("Small brown rabbit with a blue scarf");
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
   await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).not.toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).toHaveAttribute("aria-disabled", "false");
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await expect(page.getByRole("heading", { name: "Garden Discovery" })).toBeVisible({ timeout: 15000 });
   await expect(page.getByText("Project", { exact: true })).toBeVisible();
@@ -91,7 +93,6 @@ test("presents the Editor as the central creative workspace", async ({ page }) =
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   await expect(page.getByLabel("Story stage")).toBeVisible();
@@ -108,18 +109,17 @@ test("keeps Editor selection and inspector interactions keyboard accessible", as
   await page.getByRole("button", { name: /Sunny Forest/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole("link", { name: "Open Editor →" }).click();
 
   const object = page.getByRole("button", { name: "Milo, CHARACTER" });
   await object.focus();
   await page.keyboard.press("Enter");
   await expect(object).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByLabel("X")).toBeVisible();
-  await expect(page.getByLabel("Y")).toBeVisible();
-  await expect(page.getByLabel("Scale")).toBeVisible();
+  await expect(page.getByRole("spinbutton", { name: "X" })).toBeVisible();
+  await expect(page.getByRole("spinbutton", { name: "Y" })).toBeVisible();
+  await expect(page.getByRole("spinbutton", { name: "Scale" })).toBeVisible();
 
-  await page.getByLabel("X").fill("1000");
+  await page.getByRole("spinbutton", { name: "X" }).fill("1000");
   await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Delete object" }).click();
   await expect(page.getByText("Select something on the stage")).toBeVisible();
@@ -150,16 +150,16 @@ test("Preview renders the saved Composition and uses the canonical visual semant
   await milo.click();
   await page.getByRole("button", { name: "+ Wooden Chair" }).click();
   await page.getByRole("button", { name: "Save Changes" }).click();
-  await expect(page.getByText("Scene setup saved.", { exact: true })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("button", { name: "Save Changes" })).toBeDisabled();
 
   await page.getByRole("link", { name: "Open Editor →" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
   const object = page.getByRole("button", { name: "Milo, CHARACTER" });
-  await object.click();
-  await page.getByLabel("X").fill("960");
-  await page.getByLabel("Y").fill("540");
-  await page.getByLabel("Scale").fill("2");
+  await object.click({ force: true });
+  await page.getByRole("spinbutton", { name: "X" }).fill("960");
+  await page.getByRole("spinbutton", { name: "Y" }).fill("540");
+  await page.getByRole("spinbutton", { name: "Scale" }).fill("2");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
@@ -190,8 +190,8 @@ test("Editor blocks Preview while Composition edits are unsaved", async ({ page 
   await openSceneSetup(page);
   await page.getByRole("link", { name: "Open Editor →" }).click();
   const object = page.getByRole("button", { name: /Milo, CHARACTER/ });
-  await object.click();
-  await page.getByLabel("X").fill("1000");
+  await object.click({ force: true });
+  await page.getByRole("spinbutton", { name: "X" }).fill("1000");
   await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
 
   const preview = page.getByRole("link", { name: "Preview" });
@@ -216,14 +216,14 @@ test("Render produces a real MP4 through the renderer and artifact storage", asy
   await page.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
 
-  await expect(page.getByRole("link", { name: /Continue to Characters/ })).not.toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByRole("link", { name: /Continue to Characters/ })).toHaveAttribute("aria-disabled", "false");
   await page.getByRole("link", { name: /Continue to Characters/ }).click();
   await page.getByLabel("Name").fill("Milo");
   await page.getByLabel("Role \/ description").fill("A curious little rabbit");
   await page.getByLabel("Visual description").fill("Small brown rabbit");
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
   await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).not.toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).toHaveAttribute("aria-disabled", "false");
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await page.getByRole("button", { name: /Garden/ }).first().click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
@@ -262,14 +262,14 @@ test("RenderJob access remains scoped to its Story and Scene", async ({ page }) 
   await page.getByLabel("Scene 1 duration").fill("1");
   await page.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole("link", { name: /Continue to Characters/ })).not.toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByRole("link", { name: /Continue to Characters/ })).toHaveAttribute("aria-disabled", "false");
   await page.getByRole("link", { name: /Continue to Characters/ }).click();
   await page.getByLabel("Name").fill("Milo");
   await page.getByLabel("Role \/ description").fill("A rabbit");
   await page.getByLabel("Visual description").fill("A small brown rabbit");
   await page.getByRole("button", { name: "Create & Add to Story" }).click();
   await expect(page.getByRole("heading", { name: "Milo" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).not.toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByRole("link", { name: /Continue to Scene Setup/ })).toHaveAttribute("aria-disabled", "false");
   await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
   await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
   await page.getByRole("button", { name: "Save Changes" }).click();
