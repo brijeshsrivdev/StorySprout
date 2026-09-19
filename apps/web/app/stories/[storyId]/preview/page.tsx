@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEditorContext, type Composition } from "../../../../lib/editor";
 import { Button, PageIntro, Panel } from "../../../../components/ui";
-import { interpretScene } from "@storysprout/editor-model";
+import { interpretPreviewComposition, previewObjectStyle } from "../../../../lib/preview";
 
 export default function PreviewPage({ params, searchParams }: {
   params: Promise<{ storyId: string }>;
@@ -35,11 +35,11 @@ export default function PreviewPage({ params, searchParams }: {
   }, [params, searchParams]);
 
   const scene = composition?.scenes?.[0];
-  let plan: ReturnType<typeof interpretScene> | null = null;
+  let plan: ReturnType<typeof interpretPreviewComposition> | null = null;
   let interpretationError = "";
-  if (scene) {
+  if (composition) {
     try {
-      plan = interpretScene(scene);
+      plan = interpretPreviewComposition(composition);
     } catch (e) {
       interpretationError = e instanceof Error ? e.message : "Composition cannot be previewed";
     }
@@ -92,10 +92,10 @@ export default function PreviewPage({ params, searchParams }: {
                   key={object.id}
                   className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border-2 px-3 text-center text-xs font-bold shadow-sm"
                   style={{
-                    left: `${(object.x / 1920) * 100}%`,
-                    top: `${(object.y / 1080) * 100}%`,
-                    width: `${(object.width / 1920) * 100}%`,
-                    height: `${(object.height / 1080) * 100}%`,
+                    left: `${previewObjectStyle(object).left}%`,
+                    top: `${previewObjectStyle(object).top}%`,
+                    width: `${previewObjectStyle(object).width}%`,
+                    height: `${previewObjectStyle(object).height}%`,
                     background: object.fill,
                     borderColor: object.border
                   }}
