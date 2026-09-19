@@ -81,7 +81,16 @@ Characters remain reusable Project data; Scene Setup remains preparation; Editor
 
 ## Validation status
 
-The current branch's feature implementation documents describe targeted tests for Preview/Render. Local validation of backend unit/integration tests (`./mvnw test` - 100% pass), database schema migration (`V7__render_jobs.sql`), and frontend TypeScript type checking (`npm --workspace apps/web run typecheck` - 0 errors) has been completed.
+The UI Foundation + Preview/Render validation milestone is green on the exact current branch HEAD.
+
+GitHub Actions CI run #159 (35437795279) validated exact HEAD c67b69a0e77ad282240ce4255d6782d800d2b7aa:
+
+- Web lint, typecheck, unit tests and production build — passed.
+- API compile and tests — passed.
+- Renderer typecheck, tests and build — passed.
+- Browser E2E with PostgreSQL, MinIO, renderer, API and web — passed.
+
+The UI-specific remediation restored Tailwind v4 PostCSS processing through apps/web/postcss.config.mjs. The repository already contained the intended StorySprout tokens and utility-based UI; the primary failure was the missing styling build integration.
 
 ## Not implemented
 
