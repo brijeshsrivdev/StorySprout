@@ -10,7 +10,8 @@
     "test": "node --import tsx --test "src/**/*.test.ts""
   },
   "dependencies": {
-    "@storysprout/editor-model": "0.1.0"
+    "@storysprout/editor-model": "0.1.0",
+    "@storysprout/validation": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
