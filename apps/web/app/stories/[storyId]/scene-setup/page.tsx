@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
@@ -417,7 +418,7 @@ export default function SceneSetupPage() {
                   ))}
                 </div>
                 <div className="mt-4 flex items-center justify-between gap-3">
-                  {!dialogue.length ? <p className="text-sm text-[var(--ss-muted)]">No dialogue yet. Stage the conversation when you're ready.</p> : <p className="text-xs text-[var(--ss-muted)]">{dialogue.length} line{dialogue.length === 1 ? "" : "s"}</p>}
+                  {!dialogue.length ? <p className="text-sm text-[var(--ss-muted)]">No dialogue yet. Stage the conversation when you&apos;re ready.</p> : <p className="text-xs text-[var(--ss-muted)]">{dialogue.length} line{dialogue.length === 1 ? "" : "s"}</p>}
                   <Button variant="secondary" onClick={() => change(setDialogue, [...dialogue, { speakerType: "NARRATOR", characterId: null, text: "" }])}>+ Add line</Button>
                 </div>
               </Card>

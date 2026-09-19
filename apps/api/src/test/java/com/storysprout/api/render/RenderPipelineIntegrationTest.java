@@ -72,6 +72,13 @@ class RenderPipelineIntegrationTest {
 
     @DynamicPropertySource
     static void infrastructure(DynamicPropertyRegistry registry) {
+        if (renderer == null) {
+            try {
+                startRenderer();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
@@ -82,10 +89,6 @@ class RenderPipelineIntegrationTest {
         registry.add("storysprout.storage.bucket", () -> "integration-renders");
     }
 
-    @BeforeAll
-    static void verifyRendererStarted() {
-        if (renderer == null) throw new IllegalStateException("Renderer stub was not started");
-    }
 
     @Test
     void renderRequestPersistsSnapshotRendersStoresArtifactAndServesIt() throws Exception {

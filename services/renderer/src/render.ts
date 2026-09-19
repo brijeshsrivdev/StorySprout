@@ -27,7 +27,21 @@ export function validateRenderRequest(request: unknown): asserts request is Rend
   if (typeof record.compositionVersion !== "number" || !Number.isInteger(record.compositionVersion) || record.compositionVersion < 1) {
     throw new Error("Composition version is invalid");
   }
-  parseComposition(record.composition);
+  try {
+    const comp = parseComposition(record.composition);
+    if (comp.scenes.some(s => s.timeline && s.timeline.length > 0)) {
+      throw new Error("Timeline content is not supported in V1");
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (typeof record.composition === "object" && record.composition !== null) {
+      const scenes = (record.composition as Record<string, unknown>).scenes;
+      if (Array.isArray(scenes) && scenes.some((s: Record<string, unknown>) => Array.isArray(s?.timeline) && s.timeline.length > 0)) {
+        throw new Error(`Invalid Composition Timeline: ${msg}`);
+      }
+    }
+    throw new Error(`Invalid Composition payload: ${msg}`);
+  }
 }
 
 export function buildFilterGraph(composition: Composition): string {

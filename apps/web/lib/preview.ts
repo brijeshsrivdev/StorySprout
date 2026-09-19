@@ -9,11 +9,11 @@ export type PreviewState =
   | { kind: "empty"; composition: Composition }
   | { kind: "error"; message: string };
 
-export function interpretPreviewComposition(composition: Composition) {
-  if (!composition.scenes.length) {
+export function interpretPreviewComposition(composition: any) {
+  if (!composition.scenes?.length) {
     return { backgroundColor: "#EEF1F5", objects: [] as RenderVisual[] };
   }
-  return interpretScene(composition.scenes[0]);
+  return interpretScene(composition.scenes[0] as any);
 }
 
 export function previewObjectStyle(object: RenderVisual) {

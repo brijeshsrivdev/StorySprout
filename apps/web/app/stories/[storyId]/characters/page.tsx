@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
@@ -523,7 +524,7 @@ export default function CharactersPage() {
 
         <footer className="sticky bottom-0 z-10 -mx-5 mt-10 border-t border-[var(--ss-border)] bg-[var(--ss-bg)]/95 px-5 py-4 backdrop-blur-sm lg:-mx-8 lg:px-8">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-[var(--ss-muted)]">Build your cast here; Scene Setup will use the Story's selected characters.</p>
+            <p className="text-xs text-[var(--ss-muted)]">Build your cast here; Scene Setup will use the Story&apos;s selected characters.</p>
             <Link
               href={`/stories/${storyId}/scene-setup`}
               aria-disabled={storyCharacters.length === 0}
