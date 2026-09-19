@@ -1,5 +1,5 @@
 import { cloneElement, isValidElement, useId } from "react";
-import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactElement, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 export const cx=(...v:Array<string|false|null|undefined>)=>v.filter(Boolean).join(" ");
 
@@ -19,7 +19,7 @@ const field="w-full rounded-[10px] border border-[var(--ss-border-strong)] bg-wh
 export function Input(props:InputHTMLAttributes<HTMLInputElement>){return <input {...props} className={cx(field,props.className)}/>}
 export function Textarea(props:TextareaHTMLAttributes<HTMLTextAreaElement>){return <textarea {...props} className={cx(field,"resize-y",props.className)}/>}
 export function Select(props:SelectHTMLAttributes<HTMLSelectElement>){return <select {...props} className={cx(field,"bg-white",props.className)}/>}
-export function Field({label,id,help,error,children}: {label:string;id?:string;help?:string;error?:string;children:ReactNode}){const generatedId=useId().replace(/:/g,"");const childId=isValidElement(children)&&typeof children.props.id==="string"?children.props.id:undefined;const controlId=id??childId??("field-"+generatedId);const control=isValidElement(children)?cloneElement(children,{id:childId??controlId}):children;return <div><label htmlFor={controlId} className="text-sm font-semibold">{label}</label>{help&&<p id={controlId+"-help"} className="mt-1 text-xs text-[var(--ss-muted)]">{help}</p>}<div className="mt-2">{control}</div>{error&&<p id={controlId+"-error"} role="alert" className="mt-1.5 text-xs font-medium text-red-700">{error}</p>}</div>}
+export function Field({label,id,help,error,children}: {label:string;id?:string;help?:string;error?:string;children:ReactNode}){const generatedId=useId().replace(/:/g,"");const props=isValidElement(children)&&children.props&&typeof children.props==="object"?(children.props as Record<string,unknown>):null;const childId=props&&typeof props.id==="string"?props.id:undefined;const controlId=id??childId??("field-"+generatedId);const control=isValidElement(children)?cloneElement(children as ReactElement<{id?:string}>,{id:childId??controlId}):children;return <div><label htmlFor={controlId} className="text-sm font-semibold">{label}</label>{help&&<p id={controlId+"-help"} className="mt-1 text-xs text-[var(--ss-muted)]">{help}</p>}<div className="mt-2">{control}</div>{error&&<p id={controlId+"-error"} role="alert" className="mt-1.5 text-xs font-medium text-red-700">{error}</p>}</div>}
 
 export function Panel({children,className}:HTMLAttributes<HTMLDivElement>){return <div className={cx("rounded-[16px] border border-[var(--ss-border)] bg-white shadow-[var(--ss-shadow-raised)]",className)}>{children}</div>}
 export function Card({children,className}:HTMLAttributes<HTMLElement>){return <article className={cx("rounded-[16px] border border-[var(--ss-border)] bg-white shadow-[var(--ss-shadow-raised)]",className)}>{children}</article>}

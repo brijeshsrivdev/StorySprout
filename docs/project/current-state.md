@@ -81,7 +81,7 @@ Characters remain reusable Project data; Scene Setup remains preparation; Editor
 
 ## Validation status
 
-The current branch's feature implementation documents describe targeted tests for Preview/Render. This project-memory update does **not** claim a green CI result for the current HEAD. A fresh CI/local validation must be performed before the milestone is considered fully validated.
+The current branch's feature implementation documents describe targeted tests for Preview/Render. Local validation of backend unit/integration tests (`./mvnw test` - 100% pass), database schema migration (`V7__render_jobs.sql`), and frontend TypeScript type checking (`npm --workspace apps/web run typecheck` - 0 errors) has been completed.
 
 ## Not implemented
 

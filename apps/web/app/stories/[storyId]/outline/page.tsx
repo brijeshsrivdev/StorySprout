@@ -222,7 +222,7 @@ export default function StoryOutlinePage() {
             }),
           );
         } else {
-          const old = outline.scenes.find((candidate) => candidate.id === scene.id);
+          const old = outline?.scenes.find((candidate) => candidate.id === scene.id);
           const unchanged =
             old &&
             old.title === scene.title.trim() &&

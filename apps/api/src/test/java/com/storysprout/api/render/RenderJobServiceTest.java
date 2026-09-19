@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 class RenderJobServiceTest {
     private final ObjectMapper mapper = new ObjectMapper();
@@ -40,8 +41,13 @@ class RenderJobServiceTest {
         Composition composition = new Composition(compositionId, projectId, sceneId, source, 7, Instant.now(), Instant.now());
         when(editor.get(storyId, sceneId)).thenReturn(composition);
 
-        when(repository.insert(any(RenderJob.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(repository.findById(any())).thenAnswer(invocation -> Optional.of(invocation.getArgument(0, RenderJob.class)));
+        AtomicReference<RenderJob> inserted = new AtomicReference<>();
+        when(repository.insert(any(RenderJob.class))).thenAnswer(invocation -> {
+            RenderJob j = invocation.getArgument(0);
+            inserted.set(j);
+            return j;
+        });
+        when(repository.findById(any())).thenAnswer(invocation -> Optional.ofNullable(inserted.get()));
         when(repository.transition(any(), eq(RenderJobStatus.REQUESTED), eq(RenderJobStatus.QUEUED), eq(0))).thenReturn(true);
 
         RenderJobService service = new RenderJobService(editor, repository, renderer, storage, mapper, executor);
@@ -53,7 +59,7 @@ class RenderJobServiceTest {
         verify(repository).insert(captor.capture());
         JsonNode captured = captor.getValue().snapshot();
 
-        source.withArray("scenes").get(0).put("name", "Changed Later");
+        ((ObjectNode) source.withArray("scenes").get(0)).put("name", "Changed Later");
         assertEquals("Garden", captured.withArray("scenes").get(0).get("name").textValue());
         assertNotNull(queued.get());
         verifyNoInteractions(renderer);
