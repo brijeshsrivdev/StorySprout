@@ -4,6 +4,8 @@ COPY package*.json ./
 COPY services/renderer/package*.json services/renderer/
 COPY packages/editor-model/package.json packages/editor-model/
 COPY packages/editor-model/src packages/editor-model/src
+COPY packages/validation/package.json packages/validation/
+COPY packages/validation/src packages/validation/src
 COPY services/renderer/tsconfig.json services/renderer/
 COPY services/renderer/src services/renderer/src
 RUN npm install
@@ -17,5 +19,7 @@ COPY --from=build /app/services/renderer/dist ./services/renderer/dist
 COPY --from=build /app/services/renderer/package.json ./services/renderer/package.json
 COPY --from=build /app/packages/editor-model/src ./packages/editor-model/src
 COPY --from=build /app/packages/editor-model/package.json ./packages/editor-model/package.json
+COPY --from=build /app/packages/validation/src ./packages/validation/src
+COPY --from=build /app/packages/validation/package.json ./packages/validation/package.json
 EXPOSE 4000
 CMD ["node", "--import", "tsx", "services/renderer/dist/server.js"]
