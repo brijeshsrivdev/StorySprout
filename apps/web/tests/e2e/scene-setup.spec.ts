@@ -235,3 +235,14 @@ test("Render produces a real MP4 through the renderer and artifact storage", asy
   expect(body.length).toBeGreaterThan(1000);
   expect(body.subarray(4, 8).toString()).toBe("ftyp");
 });
+
+
+test("RenderJob access remains scoped to its Story and Scene", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  const response = await page.request.get(
+    new URL("/api/v1/stories/00000000-0000-0000-0000-000000000000/outline-scenes/00000000-0000-0000-0000-000000000000/render-jobs/00000000-0000-0000-0000-000000000000",
+      page.url()).toString()
+  );
+  expect(response.status()).toBe(404);
+});
