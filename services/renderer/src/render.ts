@@ -13,9 +13,21 @@ function escapeDrawText(value: string): string {
   return value.replaceAll("\\", "\\\\").replaceAll(":", "\\:").replaceAll(",", "\\,").replaceAll("'", "\\'");
 }
 
-export function validateRenderRequest(request: RenderRequest): void {
-  const composition = parseComposition(request.composition).schemaVersion === "1.1" ? request.composition : request.composition;
-  if (composition.schemaVersion !== "1.1") throw new Error("Unsupported Composition schema");
+export function validateRenderRequest(request: unknown): asserts request is RenderRequest {
+  if (!request || typeof request !== "object" || !("composition" in request)) {
+    throw new Error("Invalid render request");
+  }
+  const record = request as Record<string, unknown>;
+  if (typeof record.renderJobId !== "string" || !record.renderJobId.trim()) {
+    throw new Error("RenderJob id is required");
+  }
+  if (typeof record.compositionId !== "string" || !record.compositionId.trim()) {
+    throw new Error("Composition id is required");
+  }
+  if (typeof record.compositionVersion !== "number" || !Number.isInteger(record.compositionVersion) || record.compositionVersion < 1) {
+    throw new Error("Composition version is invalid");
+  }
+  parseComposition(record.composition);
 }
 
 export function buildFilterGraph(composition: Composition): string {
