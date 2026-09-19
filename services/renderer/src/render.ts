@@ -51,12 +51,13 @@ export function buildFilterGraph(composition: Composition): string {
   return filters.join(",");
 }
 
-export async function renderComposition(request: RenderRequest): Promise<Buffer> {
+export async function renderComposition(request: unknown): Promise<Buffer> {
   validateRenderRequest(request);
-  const scene = request.composition.scenes[0];
+  const validatedRequest = request;
+  const scene = validatedRequest.composition.scenes[0];
   const plan = interpretScene(scene);
-  const durationSeconds = request.composition.durationMs / 1000;
-  const filter = buildFilterGraph(request.composition);
+  const durationSeconds = validatedRequest.composition.durationMs / 1000;
+  const filter = buildFilterGraph(validatedRequest.composition);
   const args = [
     "-hide_banner", "-loglevel", "error",
     "-f", "lavfi", "-i", `color=c=${plan.backgroundColor}:s=1920x1080:r=30`,
@@ -71,13 +72,13 @@ export async function renderComposition(request: RenderRequest): Promise<Buffer>
   ];
 
   return new Promise((resolve, reject) => {
-    const process = spawn(process.env.FFMPEG_PATH ?? "ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(globalThis.process.env.FFMPEG_PATH ?? "ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
     const chunks: Buffer[] = [];
     let stderr = "";
-    process.stdout.on("data", chunk => chunks.push(Buffer.from(chunk)));
-    process.stderr.on("data", chunk => { stderr += chunk.toString(); });
-    process.on("error", reject);
-    process.on("close", code => {
+    child.stdout.on("data", (chunk: Buffer) => chunks.push(Buffer.from(chunk)));
+    child.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+    child.on("error", reject);
+    child.on("close", (code: number | null) => {
       if (code === 0) resolve(Buffer.concat(chunks));
       else reject(new Error(`FFmpeg exited with code ${code}: ${stderr.trim() || "unknown renderer error"}`));
     });
