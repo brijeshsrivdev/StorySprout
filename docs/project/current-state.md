@@ -1,84 +1,101 @@
 # StorySprout Current State
 
-**Snapshot:** Story Creation, AI Provider Integration, Story Outline, Characters, Scene Setup, and SPEC-006 Editor are validated on `main`. The UI foundation branch is incrementally refining the existing creator journey without changing domain or API boundaries.
+**Snapshot:** The repository currently contains the Story Creation, AI Provider Integration, Story Outline, Characters, Scene Setup, Editor, Preview, and Render foundations. The UI foundation branch is incrementally refining the creator journey while preserving domain and API boundaries.
 
-## Existing repository foundation
+## Repository foundation
+
 - Monorepo containing web, API, renderer, and shared packages.
 - Next.js web application in `apps/web`.
 - Java 21 / Spring Boot API in `apps/api`.
-- TypeScript renderer skeleton.
+- TypeScript renderer in `services/renderer`.
 - `packages/editor-model` defines Composition schema `1.1` with explicit `SceneObject.objectType`.
 - PostgreSQL stores application metadata; MinIO is local media storage.
-- GitHub Actions CI validates web, API, renderer, and E2E.
+- GitHub Actions CI exists for web, API, renderer, and E2E.
 
-## Validated features
-- Story Creation — VALIDATED.
-- AI Provider Integration — VALIDATED.
-- Story Outline — VALIDATED.
-- Characters — VALIDATED.
-- Scene Setup — VALIDATED.
-- Editor — VALIDATED.
+## Validated/product foundations
 
-## UI foundation progress
-- Shared StorySprout UI primitives and design tokens are implemented.
-- Dashboard, Create Story, Story Setup, Story Outline and Characters have focused UI foundation milestones on `feature/storysprout-ui-foundation`.
-- Scene Setup is a completed UI foundation milestone: the existing preparation model is presented as a visual staging board.
-- Editor visual/UX polish is the latest completed UI foundation milestone; Preview, Render and future Timeline functionality are not changed.
+- Story Creation — implemented.
+- AI Provider Integration — implemented.
+- Story Outline — implemented.
+- Characters — implemented.
+- Scene Setup — implemented.
+- Editor — implemented.
+- Preview — implemented on the current branch.
+- Render foundation — implemented on the current branch.
 
-## Scene Setup UI foundation
-The existing SPEC-005 domain remains authoritative:
-- Outline Scene title, summary, order and planned duration remain read-only on Scene Setup.
-- Backgrounds remain the six controlled presets.
-- Characters remain limited to Story Characters and one instance per Character per scene.
-- Props remain scene-local and duplicate instances are allowed.
-- Dialogue remains ordered manual Character/Narrator text.
-- Actions remain fixed intent values: IDLE, TALK, WALK, RUN, WAVE, SIT, JUMP.
-- No AI, Composition, timeline, animation, audio, renderer or duration editing was added.
-- Prop add/remove retains the existing immediate persistence semantics.
-- Open Editor remains preparation-data navigation only.
+## UI foundation
 
-The UI now provides:
-- scene identity and progression context;
-- visual background selection;
-- prominent Story Character staging;
-- scene-local prop ingredients;
-- conversational dialogue treatment;
-- lightweight action-intent controls;
-- explicit save-state feedback;
-- loading/error/empty/recovery states;
-- keyboard/focus semantics and responsive layout.
+The branch `feature/storysprout-ui-foundation` contains:
 
-## Editor UI foundation
-- Existing Composition schema 1.1, fixed 1920 × 1080 stage semantics, object identity, transforms, visibility, deletion, layer ordering, explicit Save and optimistic conflict behavior remain unchanged.
-- The Editor now presents a dark, compact creative workstation with a creator toolkit, dominant stage, deterministic Character/Prop placeholders, contextual inspector groups, stronger empty states and an intentionally non-functional Timeline boundary.
-- No backend/API/database/renderer/Composition changes were made.
+- shared StorySprout UI primitives and design tokens;
+- Dashboard;
+- Create Story;
+- Story Setup;
+- Story Outline;
+- Characters;
+- Scene Setup;
+- Editor visual/UX polish;
+- P1 creator-experience remediation;
+- Preview;
+- Render status/retry integration.
 
-## Validation status
-- Scene Setup backend and prior E2E validation remain valid from CI run `35101048667`; functional Editor validation remains valid from CI run `35349746183`.
-- Scene Setup UI foundation local execution: NOT RUN because the current environment cannot reach repository/build services.
-- The Editor visual milestone is not claimed as CI-validated until a fresh CI run reports green.
+## P1 remediation
+
+- Story Creation now pauses at an explicit review state for AI-generated drafts.
+- Outline distinguishes an AI-generated starting point from creator-shaped content.
+- Scene Setup and Editor reinforce Project → Story → Scene continuity.
+- Story Character cards avoid destructive Delete for current story membership.
+- Shared Field labels are programmatically associated with controls.
+- Dashboard default gradient treatment was removed.
+- Editor dark surfaces use shared design tokens.
+
+## Preview
+
+Preview is a static V1 representation of the persisted Composition:
+
+- loads the existing Editor context;
+- reads `composition.compositionJson`;
+- uses the shared `@storysprout/editor-model` scene interpretation;
+- preserves object order, visibility, position, scale, and semantic object identity;
+- provides loading, empty, ready, error, and return-to-Editor states;
+- does not introduce a second scene model or timeline.
+
+## Render
+
+Render foundation provides:
+
+- RenderJob lifecycle: REQUESTED → QUEUED → RENDERING → COMPLETED, with FAILED/retry;
+- exact Composition id/version capture;
+- immutable JSON snapshot per render job;
+- renderer isolation from PostgreSQL;
+- deterministic static 1920×1080, 30fps, 16:9 MP4 output;
+- MinIO/S3-compatible object storage abstraction;
+- artifact retrieval;
+- UI progress/status/retry behavior.
+
+Current renderer intentionally rejects non-empty Timeline content because V1 animation timing is not implemented.
 
 ## Architecture boundaries
-Characters remain reusable Project data; Scene Setup remains pre-editor preparation; Editor/Composition remains canonical editable visual state; renderer remains a separate rendering service consuming immutable Composition snapshots.
+
+Characters remain reusable Project data; Scene Setup remains preparation; Editor/Composition remains canonical editable visual state; Preview reads that canonical state; Render consumes an immutable Composition snapshot; renderer remains a separate service.
+
+## Validation status
+
+The current branch's feature implementation documents describe targeted tests for Preview/Render. This project-memory update does **not** claim a green CI result for the current HEAD. A fresh CI/local validation must be performed before the milestone is considered fully validated.
 
 ## Not implemented
-- Timeline.
-- Playback timing, keyframes, audio timing, lip-sync, animation generation/playback.
-- Character image generation/upload and advanced asset management.
-- Voice/music/media generation.
-- Preview/render/FFmpeg/render jobs.
-- Direct YouTube publishing.
-- Authentication/authorization.
-- Payments/collaboration/production deployment.
 
-## P1 remediation milestone
-- Shared `Field` now programmatically associates its visible label with the rendered control and preserves explicit control IDs where supplied.
-- Story Character cards no longer expose Delete while the Character is a current Story member; Project Library deletion remains available under existing server-side reference protection.
-- Successful AI Story Creation pauses at an explicit `Your Story Draft` review state before continuing to Story Outline.
-- AI-generated Outline content is presented as an `AI-generated starting point` and becomes `Creator-shaped outline` after creator edits in the current session; persistence semantics are unchanged.
-- Scene Setup and Editor now reinforce `Project → Story → Scene` and the reusable Project Character → Story Character relationship.
-- Dashboard story cards no longer use the default gradient; Editor dark workspace surfaces use shared editor design tokens.
-- No backend, API, database, Composition, renderer, Preview, Render, or Timeline work was introduced.
+- Timeline playback/keyframes/animation generation
+- audio/music/SFX timing
+- lip-sync/facial animation
+- AI video generation
+- advanced camera controls
+- direct YouTube publishing
+- thumbnails/analytics
+- collaboration/marketplace
+- production authentication/authorization
+- payments/production deployment
 
-## P1 remediation validation
-Frontend tests/build/lint were not executed in this environment; repository/build service execution remains unavailable. No CI result is claimed for this commit.
+## Current next step
+
+Perform a fresh UI Foundation + Preview/Render visual and functional QA audit, inspect CI for the current HEAD, reconcile findings, then update this document and `session-handoff.md` before beginning the next major feature.
