@@ -12,7 +12,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class MinioObjectStorageTest {
     @Container
-    static final GenericContainer<?> minio = new GenericContainer<>("minio/minio:latest")
+    static final GenericContainer<?> minio = new GenericContainer<>("quay.io/minio/minio:RELEASE.2024-03-30T09-41-56Z")
             .withExposedPorts(9000)
             .withEnv("MINIO_ROOT_USER", "storysprout")
             .withEnv("MINIO_ROOT_PASSWORD", "storysprout")
