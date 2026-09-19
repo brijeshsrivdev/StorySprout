@@ -135,3 +135,61 @@ test("exposes Preview and Render without reopening the frozen Editor workflow", 
   await expect(page.getByRole("button", { name: "Render" })).toBeVisible();
   await expect(page.getByText("Coming next · no timing controls in Editor V1")).toBeVisible();
 });
+
+
+test("Preview renders the saved Composition and uses the canonical visual semantics", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("button", { name: /Sunny Forest/ }).click();
+  const milo = page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first();
+  await milo.click();
+  await page.getByRole("button", { name: "+ Wooden Chair" }).click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
+
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+
+  const object = page.getByRole("button", { name: "Milo, CHARACTER" });
+  await object.click();
+  await page.getByLabel("X").fill("960");
+  await page.getByLabel("Y").fill("540");
+  await page.getByLabel("Scale").fill("2");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+
+  await page.getByRole("link", { name: "Preview" }).click();
+  await expect(page.getByRole("heading", { name: /Garden Discovery/ })).toBeVisible();
+  await expect(page.getByText("Saved Composition · 1.1", { exact: true })).toBeVisible();
+  await expect(page.getByText("1920 × 1080 · 30 fps · static preview", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Story Composition preview")).toBeVisible();
+  await expect(page.getByLabel(/CHARACTER/)).toHaveCount(1);
+  await expect(page.getByText("wooden_chair")).toBeVisible();
+});
+
+test("Preview shows a recoverable error when the saved Composition cannot be loaded", async ({ page }) => {
+  await page.route("**/api/v1/stories/*/outline-scenes/*/editor", async route => {
+    await route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { code: "LOAD_FAILED", message: "Saved Composition is temporarily unavailable.", fields: [] } })
+    });
+  });
+  await page.goto("/stories/test-story/preview?scene=test-scene");
+  await expect(page.getByRole("heading", { name: "Preview unavailable" })).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("Saved Composition is temporarily unavailable.");
+  await expect(page.getByRole("link", { name: "Return to Editor" })).toHaveAttribute("href", /\/stories\/test-story\/editor\?scene=test-scene/);
+});
+
+test("Editor blocks Preview while Composition edits are unsaved", async ({ page }) => {
+  await openSceneSetup(page);
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  const object = page.getByRole("button", { name: /Milo, CHARACTER/ });
+  await object.click();
+  await page.getByLabel("X").fill("1000");
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+
+  const preview = page.getByRole("link", { name: "Preview" });
+  await expect(preview).toHaveAttribute("aria-disabled", "true");
+  const initialUrl = page.url();
+  await preview.click();
+  await expect(page).toHaveURL(initialUrl);
+});
