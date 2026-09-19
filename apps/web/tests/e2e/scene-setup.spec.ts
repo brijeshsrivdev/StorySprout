@@ -193,3 +193,45 @@ test("Editor blocks Preview while Composition edits are unsaved", async ({ page 
   await preview.click();
   await expect(page).toHaveURL(initialUrl);
 });
+
+
+test("Render produces a real MP4 through the renderer and artifact storage", async ({ page }) => {
+  await page.goto("/create");
+  await page.getByRole("button", { name: "Blank Story" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Story idea").fill("A rabbit visits a garden.");
+  await page.getByRole("button", { name: "Ages 6–8" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "+ Add Scene" }).click();
+  await page.getByLabel("Scene 1 title").fill("Render Smoke Test");
+  await page.getByLabel("Scene 1 summary").fill("A one second render smoke test.");
+  await page.getByLabel("Scene 1 duration").fill("1");
+  await page.getByRole("button", { name: "Save Changes" }).click();
+
+  await page.getByRole("link", { name: /Continue to Characters/ }).click();
+  await page.getByLabel("Name").fill("Milo");
+  await page.getByLabel("Role \/ description").fill("A curious little rabbit");
+  await page.getByLabel("Visual description").fill("Small brown rabbit");
+  await page.getByRole("button", { name: "Create & Add to Story" }).click();
+  await page.getByRole("link", { name: /Continue to Scene Setup/ }).click();
+  await page.getByRole("button", { name: /Garden/ }).first().click();
+  await page.getByRole("button", { name: /Milo/ }).filter({ hasText: "Milo" }).first().click();
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await page.getByRole("link", { name: "Open Editor →" }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Render" }).click();
+  await expect(page.getByText(/rendering|queued/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/completed · 100% · Composition v1/i)).toBeVisible({ timeout: 120000 });
+
+  const openMp4 = page.getByRole("link", { name: "Open MP4" });
+  await expect(openMp4).toBeVisible();
+  const artifactUrl = await openMp4.getAttribute("href");
+  if (!artifactUrl) throw new Error("Render artifact URL missing");
+  const response = await page.request.get(new URL(artifactUrl, page.url()).toString());
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toContain("video/mp4");
+  const body = await response.body();
+  expect(body.length).toBeGreaterThan(1000);
+  expect(body.subarray(4, 8).toString()).toBe("ftyp");
+});
