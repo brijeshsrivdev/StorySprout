@@ -1,12 +1,12 @@
 import { createServer } from "node:http";
-import { renderComposition, type RenderRequest } from "./render.js";
+import { renderComposition } from "./render.js";
 
 const port = Number(process.env.PORT ?? 4000);
 
-async function readJson(req: import("node:http").IncomingMessage): Promise<RenderRequest> {
+async function readJson(req: import("node:http").IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(Buffer.from(chunk));
-  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as RenderRequest;
+  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
 }
 
 const server = createServer(async (req, res) => {
