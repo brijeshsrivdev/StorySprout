@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { interpretScene, type Composition } from "@storysprout/editor-model";
+import { parseComposition } from "@storysprout/validation";
 
 export interface RenderRequest {
   renderJobId: string;
@@ -13,15 +14,8 @@ function escapeDrawText(value: string): string {
 }
 
 export function validateRenderRequest(request: RenderRequest): void {
-  const composition = request.composition;
+  const composition = parseComposition(request.composition).schemaVersion === "1.1" ? request.composition : request.composition;
   if (composition.schemaVersion !== "1.1") throw new Error("Unsupported Composition schema");
-  if (composition.width !== 1920 || composition.height !== 1080 || composition.fps !== 30) {
-    throw new Error("V1 renderer requires 1920x1080 at 30 fps");
-  }
-  if (composition.durationMs <= 0) throw new Error("Composition duration must be positive");
-  if (composition.scenes.length !== 1) throw new Error("V1 renderer supports exactly one scene");
-  if (composition.scenes[0].durationMs <= 0) throw new Error("Scene duration must be positive");
-  if (composition.scenes[0].timeline.length > 0) throw new Error("Timeline is not supported by V1 renderer");
 }
 
 export function buildFilterGraph(composition: Composition): string {
