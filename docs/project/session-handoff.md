@@ -1,57 +1,63 @@
 # StorySprout Session Handoff
 
 ## Current branch
-`feature/storysprout-ui-foundation`
+feature/storysprout-ui-foundation
 
 ## HEAD
-`f6c397fc87ea61ee7e756f7202f69df3fdfb266f`
+c67b69a0e77ad282240ce4255d6782d800d2b7aa
 
-Commit: `feat: add preview and render foundation`
+Commit: fix(web): type UI foundation test with Vitest
 
 ## Current milestone
 
-The branch has progressed beyond the earlier UI P1 remediation. Preview and Render foundation are now present.
+UI Visual Foundation + QA — completed and validated.
 
-### Completed
+The previous Preview + Render milestone remains intact. This milestone restored the shared Tailwind visual pipeline and verified the existing creator journey without redesigning product flows.
 
-- Shared UI foundation and creator journey screens.
-- P1 creator-experience remediation.
-- Static Preview flow.
-- RenderJob lifecycle and immutable Composition snapshot flow.
-- Renderer service with deterministic static 1920×1080, 30fps MP4 output.
-- Render artifact storage abstraction and MinIO/local support.
-- Editor integration for Preview and Render status/retry.
+## Root cause resolved
 
-## Current source of truth
+The web application used Tailwind CSS 4 and already had StorySprout utility classes/tokens, but no apps/web/postcss.config.mjs existed to register @tailwindcss/postcss.
+
+That prevented Tailwind utilities from being compiled, which explains why localhost:3000 could appear as essentially unstyled/default HTML.
+
+## Completed
+
+- Restored Tailwind v4 PostCSS integration.
+- Hardened global visual/accessibility baseline.
+- Added shared UI foundation regression tests.
+- Audited Dashboard → Create Story → Story Setup → Outline → Characters → Scene Setup → Editor → Preview → Render status.
+- Preserved the approved warm cinematic studio direction.
+- Preserved existing Composition, Preview and Render architecture.
+- Did not implement Timeline.
+
+## Validation
+
+GitHub Actions CI run #159 (35437795279) is green for exact HEAD c67b69a0e77ad282240ce4255d6782d800d2b7aa.
+
+- Web lint — PASS
+- Web typecheck — PASS
+- Web unit tests — PASS
+- Web production build — PASS
+- API compile/tests — PASS
+- Renderer typecheck/tests/build — PASS
+- Full browser E2E — PASS
+
+The browser E2E environment included PostgreSQL, MinIO, renderer, API and web.
+
+## Local runtime note
+
+The repository-connected environment cannot inspect the user's running localhost:3000 process or browser directly. The root cause was established from the checked-in web build configuration and then verified by the CI production build plus browser E2E run.
+
+If localhost:3000 remains unstyled after pulling this HEAD, restart the Next.js dev server so the restored PostCSS configuration is loaded and clear stale .next output if necessary.
+
+## Architecture/source of truth
 
 - Composition schema 1.1 remains canonical.
-- Preview reads persisted Composition through the existing Editor context.
-- RenderJob stores the exact Composition version and immutable snapshot.
-- Renderer consumes the render request snapshot and does not access PostgreSQL.
+- Preview reads persisted Composition.
+- RenderJob captures immutable Composition snapshots.
+- Renderer remains isolated from PostgreSQL.
+- No Timeline behavior exists.
 
-## Validation status
+## Next step
 
-Repository feature documents describe targeted tests for Preview/Render, but this session has not independently executed the full repository test/build/CI suite. Do not claim green validation until an actual CI/local result is available.
-
-## Known documentation reconciliation needed
-
-The pre-existing `docs/project/current-state.md` was stale and still said Preview/Render were not implemented. It is being updated together with this recovery-memory milestone.
-
-## Open work
-
-1. Perform a fresh UI Foundation + Preview/Render visual and functional QA audit against the current HEAD.
-2. Run/inspect CI for the current HEAD before treating the latest milestone as validated.
-3. Reconcile any audit findings before starting the next major product feature.
-4. Keep this handoff updated at the end of each future session.
-
-## Explicitly not implemented
-
-- Timeline/keyframes/animation playback
-- audio/music/SFX integration
-- lip-sync
-- AI video generation
-- advanced camera controls
-- YouTube publishing
-- thumbnails/analytics
-- collaboration/marketplace
-- production deployment/authentication/payments
+Do not start Timeline as part of this milestone. Continue with the next explicitly specified product milestone only after confirming this UI foundation remains the baseline.
